@@ -1,0 +1,157 @@
+.branch-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.branch-popup-container {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+}
+
+.branch-popup-header {
+    position: relative;
+    height: 250px;
+}
+
+.branch-popup-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.branch-popup-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.branch-popup-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: rotate(90deg);
+}
+
+.branch-popup-content {
+    padding: 2rem;
+}
+
+.branch-popup-content h2 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    margin-bottom: 1.5rem;
+}
+
+.branch-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+    font-size: 1.1rem;
+}
+
+.branch-info-row .icon {
+    font-size: 1.2rem;
+    min-width: 25px; /* Alignment */
+}
+
+.branch-info-grid {
+    display: flex;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 1.5rem 0;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.branch-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.branch-info-item .icon {
+    font-size: 1.2rem;
+}
+
+.branch-popup-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.branch-popup-actions button,
+.branch-popup-actions .map-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.branch-popup-actions button {
+    background: #f1f5f9;
+    color: var(--color-text);
+}
+
+.branch-popup-actions .map-btn {
+    background: linear-gradient(135deg, var(--color-accent) 0%, #C9A961 100%);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.branch-popup-actions button:hover,
+.branch-popup-actions .map-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

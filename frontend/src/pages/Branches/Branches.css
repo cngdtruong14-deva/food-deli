@@ -1,0 +1,97 @@
+.branches-page {
+    width: 80%;
+    margin: 80px auto; /* account for fixed navbar */
+    animation: fadeIn 0.5s;
+    min-height: 60vh;
+}
+
+.branches-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-top: 2rem;
+}
+
+.branches-header h2 {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+}
+
+.branches-header p {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.branches-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.branch-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--color-border);
+}
+
+.branch-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15);
+    border-color: var(--color-accent);
+}
+
+.branch-img-container {
+    height: 200px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.branch-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.branch-card:hover .branch-img-container img {
+    transform: scale(1.1);
+}
+
+.branch-info {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.branch-info h3 {
+    font-family: var(--font-heading);
+    color: var(--color-primary);
+    font-size: 1.3rem;
+    line-height: 1.4;
+    min-height: 3.5rem; /* fix height alignment */
+}
+
+.branch-address, .branch-phone {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .branches-page {
+        width: 90%;
+        margin-top: 60px;
+    }
+    
+    .branches-header h2 {
+        font-size: 2.2rem;
+    }
+}

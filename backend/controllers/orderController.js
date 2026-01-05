@@ -61,6 +61,23 @@ const placeOrder = async (req, res) => {
     await newOrder.save();
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
+    // Update table status to Occupied if Dine-in
+    if (newOrder.tableId) { // Check if tableId exists
+       const updatedTable = await tableModel.findByIdAndUpdate(
+         newOrder.tableId,
+         { status: "Occupied" },
+         { new: true }
+       );
+
+       if (updatedTable && io) {
+          io.emit("table:status_updated", {
+             tableId: updatedTable._id,
+             branchId: updatedTable.branchId,
+             status: "Occupied"
+          });
+       }
+    }
+
     // Emit real-time event for new order
     if (io) {
       const populatedOrder = await orderModel

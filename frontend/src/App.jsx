@@ -4,6 +4,7 @@ import { Route, Routes, useSearchParams, useNavigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Cart from "./pages/Cart/Cart";
 import PlaceOrder from "./pages/PlaceOrder/PlaceOrder";
+import Branches from "./pages/Branches/Branches";
 import Footer from "./components/Footer/Footer";
 import LoginPopup from "./components/LoginPopup/LoginPopup";
 import CartFAB from "./components/CartFAB/CartFAB";
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="/order" element={<PlaceOrder />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/myorders" element={<MyOrders />} />
+          <Route path="/branches" element={<Branches />} />
         </Routes>
       </div>
       <CartFAB />

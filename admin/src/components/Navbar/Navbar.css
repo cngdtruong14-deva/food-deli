@@ -12,8 +12,11 @@
 }
 
 .navbar .logo {
-    width: max(10%, 120px);
-    height: auto;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 2rem;
+    color: var(--primary-color);
+    cursor: pointer;
 }
 
 .navbar .profile {

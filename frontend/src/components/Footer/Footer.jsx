@@ -7,7 +7,7 @@ const Footer = () => {
     <div className="footer" id="footer">
       <div className="footer-content">
         <div className="footer-content-left">
-          <img src={assets.logo} alt="" />
+          <div className="logo footer-logo">Freedom.</div>
           <p>
             Chúng tôi cam kết mang đến cho bạn những trải nghiệm ẩm thực tuyệt vời 
             nhất với thực đơn đa dạng và chất lượng phục vụ hàng đầu. Đặt hàng 
@@ -38,7 +38,7 @@ const Footer = () => {
       </div>
       <hr />
       <p className="footer-copyright">
-        Bản quyền 2024 @ NhaHang.vn - Đã đăng ký bản quyền.
+        Bản quyền 2024 @ Freedom - Đã đăng ký bản quyền.
       </p>
     </div>
   );

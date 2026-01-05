@@ -46,11 +46,12 @@
   gap: 1.5rem;
 }
 
-.footer-content-left img {
-  width: 160px;
-  height: auto;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
+.footer-logo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
 }
 
 .footer-content-left p {

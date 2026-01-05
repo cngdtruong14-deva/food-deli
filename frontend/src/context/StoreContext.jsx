@@ -116,10 +116,24 @@ const StoreContextProvider = (props) => {
     setCartItems(response.data.cartData);
   };
 
+  const [branches, setBranches] = useState([]);
+
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get(url + "/api/branch/list");
+      if (response.data.success) {
+        setBranches(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching branches:", error);
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       await fetchFoodList();
       await fetchCategories();
+      await fetchBranches(); // Added fetchBranches
       if (localStorage.getItem("token")) {
         setToken(localStorage.getItem("token"));
         await loadCardData(localStorage.getItem("token"));
@@ -162,6 +176,7 @@ const StoreContextProvider = (props) => {
     clearDineInContext,
     searchQuery,
     setSearchQuery,
+    branches,
   };
   
   return (

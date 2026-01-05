@@ -8,6 +8,10 @@
   --color-accent-light: #F4E4BC;  /* Light Gold */
   --color-bg: #FAF9F6;            /* Cream White */
   --color-bg-secondary: #FFFFFF;   /* Pure White */
+  --content-bg: #F3F4F6;         /* Light Gray for content areas */
+  --card-bg: #FFFFFF;             /* White for cards */
+  --text-primary: #1F2937;        /* Dark Gray for primary text */
+  --text-secondary: #6B7280;      /* Medium Gray for secondary text */
   --color-text: #0F172A;          /* Deep Navy */
   --color-text-muted: #64748B;     /* Slate Gray */
   --color-text-light: #94A3B8;    /* Light Gray */

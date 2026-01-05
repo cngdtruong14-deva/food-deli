@@ -76,21 +76,21 @@ const Dashboard = ({ url }) => {
   }, [selectedBranch]);
 
   const avgOrderValue = stats?.totalOrders > 0 
-    ? (stats.totalSales / stats.totalOrders).toFixed(2) 
+    ? (stats.totalSales / stats.totalOrders).toFixed(0) 
     : 0;
 
   return (
     <div className="dashboard add">
       <div className="dashboard-header">
-        <h2>📊 Analytics Dashboard</h2>
+        <h2>📊 Thống Kê Tổng Quan</h2>
         {branches.length > 0 && (
           <div className="branch-filter">
-            <label>Branch: </label>
+            <label>Chi nhánh: </label>
             <select
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
             >
-              <option value="">All Branches</option>
+              <option value="">Tất cả chi nhánh</option>
               {branches.map((branch) => (
                 <option key={branch._id} value={branch._id}>
                   {branch.name}
@@ -102,7 +102,7 @@ const Dashboard = ({ url }) => {
       </div>
 
       {loading ? (
-        <div className="loading">Loading analytics...</div>
+        <div className="loading">Đang tải dữ liệu...</div>
       ) : (
         <>
           {/* Stat Cards */}
@@ -112,8 +112,8 @@ const Dashboard = ({ url }) => {
                 <div className="stat-icon">💰</div>
               </div>
               <div className="stat-info">
-                <h3>${stats?.totalSales || 0}</h3>
-                <p>Total Revenue</p>
+                <h3>{Number(stats?.totalSales || 0).toLocaleString('vi-VN')} đ</h3>
+                <p>Tổng doanh thu</p>
               </div>
             </div>
             <div className="stat-card orders">
@@ -122,7 +122,7 @@ const Dashboard = ({ url }) => {
               </div>
               <div className="stat-info">
                 <h3>{stats?.totalOrders || 0}</h3>
-                <p>Total Orders</p>
+                <p>Tổng đơn hàng</p>
               </div>
             </div>
             <div className="stat-card avg">
@@ -130,8 +130,8 @@ const Dashboard = ({ url }) => {
                 <div className="stat-icon">📈</div>
               </div>
               <div className="stat-info">
-                <h3>${avgOrderValue}</h3>
-                <p>Avg Order Value</p>
+                <h3>{Number(avgOrderValue).toLocaleString('vi-VN')} đ</h3>
+                <p>Giá trị TB/Đơn</p>
               </div>
             </div>
             <div className="stat-card pending">
@@ -140,7 +140,7 @@ const Dashboard = ({ url }) => {
               </div>
               <div className="stat-info">
                 <h3>{stats?.pendingOrders || 0}</h3>
-                <p>Pending Orders</p>
+                <p>Đơn chờ xử lý</p>
               </div>
             </div>
           </div>
@@ -149,53 +149,54 @@ const Dashboard = ({ url }) => {
           <div className="charts-row">
             {/* Daily Sales Chart */}
             <div className="chart-container">
-              <h3>📅 Daily Sales (Last 7 Days)</h3>
+              <h3>📅 Doanh Thu (7 Ngày Qua)</h3>
               {dailySales.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={dailySales}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" fontSize={12} />
                     <YAxis fontSize={12} />
-                    <Tooltip />
-                    <Bar dataKey="sales" fill="#ff6b35" name="Sales ($)" />
+                    <Tooltip formatter={(value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)} />
+                    <Bar dataKey="sales" fill="#ff6b35" name="Doanh thu" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="no-data">No sales data available</p>
+                <p className="no-data">Chưa có dữ liệu</p>
               )}
             </div>
 
             {/* Orders by Type */}
             <div className="chart-container small">
-              <h3>📋 Orders by Type</h3>
+              <h3>📋 Phân Loại Đơn</h3>
               {stats?.ordersByType?.length > 0 ? (
                 <div className="type-breakdown">
                   {stats.ordersByType.map((item, idx) => (
                     <div key={idx} className="type-item">
                       <span className="type-label">
-                        {item.type === "Dine-in" ? "🍽️" : item.type === "Delivery" ? "🚚" : "🛍️"} {item.type}
+                        {item.type === "Dine-in" ? "🍽️" : item.type === "Delivery" ? "🚚" : "🛍️"} 
+                        {item.type === "Dine-in" ? " Tại bàn" : " Giao hàng"}
                       </span>
                       <span className="type-count">{item.count}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="no-data">No order data</p>
+                <p className="no-data">Chưa có dữ liệu</p>
               )}
             </div>
           </div>
 
           {/* Top Selling Foods */}
           <div className="top-foods">
-            <h3>🔥 Top Selling Items</h3>
+            <h3>🔥 Món Bán Chạy</h3>
             {stats?.topFoods?.length > 0 ? (
               <table className="top-foods-table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Item Name</th>
-                    <th>Quantity Sold</th>
-                    <th>Revenue</th>
+                    <th>Tên Món</th>
+                    <th>Đã Bán</th>
+                    <th>Doanh Thu</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -204,13 +205,13 @@ const Dashboard = ({ url }) => {
                       <td>{idx + 1}</td>
                       <td>{food.name}</td>
                       <td>{food.quantity}</td>
-                      <td>${food.revenue}</td>
+                      <td>{Number(food.revenue).toLocaleString('vi-VN')} đ</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p className="no-data">No sales data yet</p>
+              <p className="no-data">Chưa có dữ liệu</p>
             )}
           </div>
         </>

@@ -34,7 +34,7 @@ const AddBranch = ({ url }) => {
 
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập");
       navigate("/");
     }
   }, []);
@@ -42,45 +42,45 @@ const AddBranch = ({ url }) => {
   return (
     <div className="add">
       <form onSubmit={onSubmitHandler} className="flex-col">
-        <h2>Add New Branch</h2>
+        <h2>Thêm Chi Nhánh Mới</h2>
         <div className="add-product-name flex-col">
-          <p>Branch Name</p>
+          <p>Tên Chi Nhánh</p>
           <input
             onChange={onChangeHandler}
             value={data.name}
             type="text"
             name="name"
-            placeholder="Enter branch name"
+            placeholder="Nhập tên chi nhánh"
             required
           />
         </div>
         <div className="add-product-name flex-col">
-          <p>Address</p>
+          <p>Địa Chỉ</p>
           <input
             onChange={onChangeHandler}
             value={data.address}
             type="text"
             name="address"
-            placeholder="Enter address"
+            placeholder="Nhập địa chỉ"
             required
           />
         </div>
         <div className="add-product-name flex-col">
-          <p>Phone</p>
+          <p>Số Điện Thoại</p>
           <input
             onChange={onChangeHandler}
             value={data.phone}
             type="text"
             name="phone"
-            placeholder="Enter phone number"
+            placeholder="Nhập số điện thoại"
           />
         </div>
         <div className="form-actions">
           <button type="submit" className="add-btn">
-            Add Branch
+            Thêm
           </button>
           <button type="button" className="cancel-btn" onClick={() => navigate("/branches")}>
-            Cancel
+            Hủy
           </button>
         </div>
       </form>

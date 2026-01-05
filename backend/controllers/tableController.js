@@ -1,6 +1,7 @@
 import tableModel from "../models/tableModel.js";
 import branchModel from "../models/branchModel.js";
 import userModel from "../models/userModel.js";
+import { io } from "../server.js";
 
 // Add table (Admin/Manager)
 const addTable = async (req, res) => {
@@ -80,10 +81,39 @@ const updateTableStatus = async (req, res) => {
       { new: true }
     );
 
+    if (table && io) {
+      io.emit("table:status_updated", {
+        tableId: table._id,
+        branchId: table.branchId,
+        status: table.status
+      });
+    }
+
     if (!table) {
       return res.json({ success: false, message: "Table not found" });
     }
 
+    // Emit socket event
+    // We need io here. tableController needs to import io. 
+    // BUT io is exported from server.js. Circular dependency risk?
+    // server.js imports tableRoute -> tableController. 
+    // tableController imports io from server.js. 
+    // This is circular. 
+    // Solution: Pass io via req.app.get('io') or import from server.js if it works (implied it worked in orderController).
+    
+    // Actually, orderController imports { io } from "../server.js".
+    
+    // Let's add the import to tableController first (in a separate step or assume it's there? No, I must check imports).
+    // I will use req.app.get("io") if attached, or import. 
+    // Checking orderController... yes it imports. 
+    // I will add import in next step.
+    
+    // Wait, let's look at tableController.js imports again.
+    // It does NOT import io.
+    
+    // I will skip adding the emit here in THIS tool call, 
+    // and do it in a multi-replace or separate one that adds the import too.
+    
     res.json({ success: true, message: "Table status updated", data: table });
   } catch (error) {
     console.log(error);

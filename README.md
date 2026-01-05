@@ -1,130 +1,97 @@
-# TOMATO - Food Ordering Website
+# Food Deli - Modern Vietnamese Food Delivery Platform
 
-This repository hosts the source code for TOMATO, a dynamic food ordering website built with the MERN Stack. It offers a user-friendly platform for seamless online food ordering.
+A full-stack food delivery application built with the **MERN Stack** (MongoDB, Express, React, Node.js), customized for the Vietnamese market with support for both delivery and dine-in experiences.
 
-## Demo
+## 🚀 Key Features
 
-- User Panel: [https://food-delivery-frontend-s2l9.onrender.com/](https://food-delivery-frontend-s2l9.onrender.com/)
-- Admin Panel: [https://food-delivery-admin-wrme.onrender.com/](https://food-delivery-admin-wrme.onrender.com/)
+### 🛒 Customer App (Frontend)
 
-## Features
+- **Interactive UI/UX**:
+  - **Dynamic Header Carousel**: Auto-rotating preview of special Combos and featured dishes.
+  - **Real-time Search**: Instant filtering of menu items by name.
+  - **Food Detail Popup**: Appetizing descriptions and visual previews without navigating away.
+- **Vietnamese Localization**: Full support for Vietnamese language and VND currency formatting (e.g., 100.000 đ).
+- **Flexible Ordering**:
+  - **Delivery**: Address management and payment integration (Stripe/COD).
+  - **Dine-in**: QR Code scanning simulation to set table context.
+- **Checkout**: Streamlined checkout process with a clear order summary list.
 
-- User Panel
-- Admin Panel
-- JWT Authentication
-- Password Hashing with Bcrypt
-- Stripe Payment Integration
-- Login/Signup
-- Logout
-- Add to Cart
-- Place Order
-- Order Management
-- Products Management
-- Filter Food Products
-- Login/Signup
-- Authenticated APIs
-- REST APIs
-- Role-Based Identification
-- Beautiful Alerts
+### 💼 Admin Dashboard
 
-## Screenshots
+- **Analytics & Insights**:
+  - **Visual Charts**: Revenue trends and top-selling items visualized using Recharts.
+  - **Business Metrics**: Real-time tracking of Total Orders, Revenue, Average Order Value, and Pending Orders.
+- **Menu Management**: Add, edit, and remove dishes with image uploads.
+- **Order Management**: Track status (Processing, Out for delivery, Delivered) and filter by date.
 
-![Hero](https://i.ibb.co/59cwY75/food-hero.png)
-- Hero Section
+### 🔧 Backend
 
-![Products](https://i.ibb.co/JnNQPyQ/food-products.png)
-- Products Section
+- **Secure API**: JWT Authentication for user and admin protection.
+- **Database**: Robust MongoDB schema for Users, Orders, Food items, and Branches.
+- **Seeding**: Automated scripts to populate the database with authentic Vietnamese menu data (`quan-nhau-tu-do`).
 
-![Cart](https://i.ibb.co/t2LrQ8p/food-cart.png)
-- Cart Page
+## 🛠️ Tech Stack
 
-![Login](https://i.ibb.co/s6PgwkZ/food-login.png)
-- Login Popup
+- **Frontend**: React.js, React Router, Context API, CSS3 (Custom animations)
+- **Admin**: React.js, Recharts, React Toastify
+- **Backend**: Node.js, Express.js, MongoDB (Mongoose), JWT, Bcrypt, Multer
+- **Payment**: Stripe Integration
 
-## Run Locally
+## 📦 Installation & Setup
 
-Clone the project
+1. **Clone the repository**
 
-```bash
-    git clone https://github.com/Mshandev/Food-Delivery
-```
-Go to the project directory
+   ```bash
+   git clone https://github.com/yourusername/food-deli.git
+   cd food-deli
+   ```
 
-```bash
-    cd Food-Delivery
-```
-Install dependencies (frontend)
+2. **Backend Setup**
 
-```bash
-    cd frontend
-    npm install
-```
-Install dependencies (admin)
+   ```bash
+   cd backend
+   npm install
 
-```bash
-    cd admin
-    npm install
-```
-Install dependencies (backend)
+   # Create .env file
+   # PORT=4000
+   # MONGO_URL=your_mongodb_connection_string
+   # JWT_SECRET=your_jwt_secret
+   # STRIPE_SECRET_KEY=your_stripe_secret_key
 
-```bash
-    cd backend
-    npm install
-```
-Setup Environment Vaiables
+   # Run the server
+   npm run server
+   ```
 
-```Make .env file in "backend" folder and store environment Variables
-  JWT_SECRET=YOUR_SECRET_TEXT
-  SALT=YOUR_SALT_VALUE
-  MONGO_URL=YOUR_DATABASE_URL
-  STRIPE_SECRET_KEY=YOUR_KEY
- ```
+3. **Frontend Setup**
 
-Setup the Frontend and Backend URL
-   - App.jsx in Admin folder
-      const url = YOUR_BACKEND_URL
-     
-  - StoreContext.js in Frontend folder
-      const url = YOUR_BACKEND_URL
+   ```bash
+   cd ../frontend
+   npm install
+   npm run dev
+   ```
 
-  - orderController in Backend folder
-      const frontend_url = YOUR_FRONTEND_URL 
+4. **Admin Panel Setup**
+   ```bash
+   cd ../admin
+   npm install
+   npm run dev
+   ```
 
-Start the Backend server
+## 🗃️ Database Seeding (Optional)
+
+To populate the database with the initial Vietnamese menu:
 
 ```bash
-    nodemon server.js
+cd backend/scripts
+node seedVietnameseMenu.js
 ```
 
-Start the Frontend server
+## 📸 Screenshots
 
-```bash
-    npm start
-```
+- **Home Page**: Interactive carousel and categorized menu.
+- **Food Popup**: Detailed view of dishes.
+- **Admin Dashboard**: Analytics and order charts.
 
-Start the Backend server
+## 📄 License
 
-```bash
-    npm start
-```
-## Tech Stack
-* [React](https://reactjs.org/)
-* [Node.js](https://nodejs.org/en)
-* [Express.js](https://expressjs.com/)
-* [Mongodb](https://www.mongodb.com/)
-* [Stripe](https://stripe.com/)
-* [JWT-Authentication](https://jwt.io/introduction)
-* [Multer](https://www.npmjs.com/package/multer)
-
-## Deployment
-
-The application is deployed on Render.
-
-## Contributing
-
-Contributions are always welcome!
-Just raise an issue, and we will discuss it.
-
-## Feedback
-
-If you have any feedback, please reach out to me [here](https://www.linkedin.com/in/muhammad-shan-full-stack-developer/)
+This project is open-source and available for educational purposes.

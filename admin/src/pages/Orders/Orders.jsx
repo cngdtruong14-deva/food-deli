@@ -40,7 +40,7 @@ const Orders = ({ url }) => {
 
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập");
       navigate("/");
       return;
     }
@@ -52,7 +52,7 @@ const Orders = ({ url }) => {
 
     // Listen for new orders
     socket.on("order:new", (newOrder) => {
-      toast.info("🆕 New Order Received!", { autoClose: 3000 });
+      toast.info("🆕 Có đơn hàng mới!", { autoClose: 3000 });
       setOrders((prevOrders) => [newOrder, ...prevOrders]);
     });
 
@@ -73,7 +73,7 @@ const Orders = ({ url }) => {
 
   return (
     <div className="order add">
-      <h3>Order Page</h3>
+      <h3>Quản Lý Đơn Hàng</h3>
       <div className="order-list">
         {orders.map((order, index) => (
           <div key={order._id || index} className="order-item">
@@ -93,12 +93,12 @@ const Orders = ({ url }) => {
               </p>
               {order.orderType === "Dine-in" ? (
                 <div className="order-item-address dine-in">
-                  <span className="order-type-badge">🍽️ Dine-in</span>
+                  <span className="order-type-badge">🍽️ Tại bàn</span>
                   {order.tableId && (
-                    <p>Table: {order.tableId.tableNumber || order.tableId}</p>
+                    <p>Bàn: {order.tableId.tableNumber || order.tableId}</p>
                   )}
                   {order.branchId && (
-                    <p>Branch: {order.branchId.name || order.branchId}</p>
+                    <p>Chi nhánh: {order.branchId.name || order.branchId}</p>
                   )}
                 </div>
               ) : (
@@ -117,23 +117,23 @@ const Orders = ({ url }) => {
               )}
               <p className="order-item-phone">{order.address?.phone}</p>
             </div>
-            <p>Items: {order.items.length}</p>
+            <p>Số lượng: {order.items.length}</p>
             <p>{order.amount.toLocaleString('vi-VN')} đ</p>
             <select
               onChange={(event) => statusHandler(event, order._id)}
               value={order.status}
             >
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Preparing">Preparing</option>
-              <option value="Served">Served</option>
-              <option value="Paid">Paid</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="Pending">Chờ xác nhận</option>
+              <option value="Confirmed">Đã xác nhận</option>
+              <option value="Preparing">Đang chuẩn bị</option>
+              <option value="Served">Đã hoàn thành/Giao hàng</option>
+              <option value="Paid">Đã thanh toán</option>
+              <option value="Cancelled">Đã hủy</option>
             </select>
           </div>
         ))}
         {orders.length === 0 && (
-          <p className="empty-message">No orders yet.</p>
+          <p className="empty-message">Chưa có đơn hàng nào.</p>
         )}
       </div>
     </div>

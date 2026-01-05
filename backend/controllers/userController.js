@@ -94,7 +94,7 @@ const identifyCustomer = async (req, res) => {
       user = new userModel({
         name: name,
         phone: phone,
-        role: "user",
+        role: "customer",
       });
       await user.save();
     } else {

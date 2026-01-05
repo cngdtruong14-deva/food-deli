@@ -20,9 +20,7 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <div className="navbar">
-      <Link to="/">
-        <img src={assets.logo} alt="" className="logo" />
-      </Link>
+      <Link to='/'><div className="logo">Freedom.</div></Link>
       <ul className="navbar-menu">
         <Link
           to="/"
@@ -38,6 +36,13 @@ const Navbar = ({ setShowLogin }) => {
         >
           Thực Đơn
         </a>
+        <Link
+          to="/branches"
+          onClick={() => setMenu("branches")}
+          className={menu === "branches" ? "active" : ""}
+        >
+          Chi Nhánh
+        </Link>
         <a
           href="#app-download"
           onClick={() => setMenu("mobile-app")}

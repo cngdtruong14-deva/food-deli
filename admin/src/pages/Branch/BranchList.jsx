@@ -35,7 +35,7 @@ const BranchList = ({ url }) => {
 
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập");
       navigate("/");
     }
     fetchBranches();
@@ -44,18 +44,18 @@ const BranchList = ({ url }) => {
   return (
     <div className="list add flex-col">
       <div className="list-header">
-        <p>All Branches</p>
+        <p>Hệ Thống Chi Nhánh</p>
         <button onClick={() => navigate("/branches/add")} className="add-btn">
-          + Add Branch
+          + Thêm Chi Nhánh
         </button>
       </div>
       <div className="list-table">
         <div className="list-table-format branch-format title">
-          <b>Name</b>
-          <b>Address</b>
-          <b>Phone</b>
-          <b>Status</b>
-          <b>Action</b>
+          <b>Tên Chi Nhánh</b>
+          <b>Địa Chỉ</b>
+          <b>Số Điện Thoại</b>
+          <b>Trạng Thái</b>
+          <b>Hành Động</b>
         </div>
         {branches.map((item, index) => (
           <div key={index} className="list-table-format branch-format">
@@ -63,15 +63,15 @@ const BranchList = ({ url }) => {
             <p>{item.address}</p>
             <p>{item.phone || "-"}</p>
             <p className={item.isActive ? "active" : "inactive"}>
-              {item.isActive ? "Active" : "Inactive"}
+              {item.isActive ? "Hoạt động" : "Ngưng hoạt động"}
             </p>
             <p onClick={() => removeBranch(item._id)} className="cursor remove-btn">
-              Remove
+              Xóa
             </p>
           </div>
         ))}
         {branches.length === 0 && (
-          <p className="empty-message">No branches found. Add one to get started.</p>
+          <p className="empty-message">Chưa có chi nhánh nào. Vui lòng thêm chi nhánh mới.</p>
         )}
       </div>
     </div>

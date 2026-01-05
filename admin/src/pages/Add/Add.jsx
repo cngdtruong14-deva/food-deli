@@ -65,7 +65,7 @@ const Add = ({ url }) => {
 
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập");
       navigate("/");
     }
     fetchCategories();
@@ -75,7 +75,7 @@ const Add = ({ url }) => {
     <div className="add">
       <form onSubmit={onSubmitHandler} className="flex-col">
         <div className="add-img-upload flex-col">
-          <p>Upload image</p>
+          <p>Tải ảnh món ăn</p>
           <label htmlFor="image">
             <img
               src={image ? URL.createObjectURL(image) : assets.upload_area}
@@ -91,30 +91,30 @@ const Add = ({ url }) => {
           />
         </div>
         <div className="add-product-name flex-col">
-          <p>Product name</p>
+          <p>Tên món ăn</p>
           <input
             onChange={onChangeHandler}
             value={data.name}
             type="text"
             name="name"
-            placeholder="Type here"
+            placeholder="Nhập tên món"
             required
           />
         </div>
         <div className="add-product-description flex-col">
-          <p>Product description</p>
+          <p>Mô tả món ăn</p>
           <textarea
             onChange={onChangeHandler}
             value={data.description}
             name="description"
             rows="6"
-            placeholder="Write content here"
+            placeholder="Nhập mô tả món ăn"
             required
           ></textarea>
         </div>
         <div className="add-category-price">
           <div className="add-category flex-col">
-            <p>Product category</p>
+            <p>Danh mục</p>
             <select
               name="category"
               required
@@ -129,18 +129,18 @@ const Add = ({ url }) => {
             </select>
           </div>
           <div className="add-price flex-col">
-            <p>Product price</p>
+            <p>Giá</p>
             <input
               onChange={onChangeHandler}
               value={data.price}
               type="Number"
               name="price"
-              placeholder="$20"
+              placeholder="Ví dụ: 50000"
               required
             />
           </div>
           <div className="add-price flex-col">
-            <p>Stock</p>
+            <p>Tồn kho</p>
             <input
               onChange={onChangeHandler}
               value={data.stock}
@@ -152,7 +152,7 @@ const Add = ({ url }) => {
           </div>
         </div>
         <button type="submit" className="add-btn">
-          ADD
+          THÊM MÓN
         </button>
       </form>
     </div>

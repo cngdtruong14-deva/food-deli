@@ -25,10 +25,14 @@
 }
 
 .navbar .logo {
-    width: 160px;
-    height: auto;
-    transition: transform var(--transition-base);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin: 0;
+    line-height: 1;
     cursor: pointer;
+    transition: transform var(--transition-base);
 }
 
 .navbar .logo:hover {

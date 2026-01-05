@@ -13,16 +13,16 @@ const Navbar = () => {
     localStorage.removeItem("admin");
     setToken("");
     setAdmin(false);
-    toast.success("Logout Successfully")
+    toast.success("Đã đăng xuất thành công")
     navigate("/");
   }
   return (
     <div className="navbar">
-      <img className="logo" src={assets.logo} alt="" />
+      <div className="logo">Freedom.</div>
       {token && admin ? (
-        <p className="login-conditon" onClick={logout}>Logout</p>
+        <p className="login-conditon" onClick={logout}>Đăng xuất</p>
       ) : (
-        <p className="login-conditon" onClick={()=>navigate("/")}>Login</p>
+        <p className="login-conditon" onClick={()=>navigate("/")}>Đăng nhập</p>
       )}
       <img className="profile" src={assets.profile_image} alt="" />
     </div>

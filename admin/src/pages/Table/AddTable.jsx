@@ -45,7 +45,7 @@ const AddTable = ({ url }) => {
 
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập");
       navigate("/");
     }
     fetchBranches();
@@ -54,10 +54,10 @@ const AddTable = ({ url }) => {
   return (
     <div className="add">
       <form onSubmit={onSubmitHandler} className="flex-col">
-        <h2>Add New Table</h2>
+        <h2>Thêm Bàn Mới</h2>
         
         <div className="add-category flex-col">
-          <p>Select Branch</p>
+          <p>Chọn Chi Nhánh</p>
           <select
             name="branchId"
             required
@@ -73,19 +73,19 @@ const AddTable = ({ url }) => {
         </div>
 
         <div className="add-product-name flex-col">
-          <p>Table Number</p>
+          <p>Số Bàn</p>
           <input
             onChange={onChangeHandler}
             value={data.tableNumber}
             type="text"
             name="tableNumber"
-            placeholder="e.g., T-01 or A1"
+            placeholder="VD: T-01 hoặc A1"
             required
           />
         </div>
 
         <div className="add-product-name flex-col">
-          <p>Capacity</p>
+          <p>Sức Chứa</p>
           <input
             onChange={onChangeHandler}
             value={data.capacity}
@@ -98,10 +98,10 @@ const AddTable = ({ url }) => {
 
         <div className="form-actions">
           <button type="submit" className="add-btn">
-            Add Table
+            Thêm
           </button>
           <button type="button" className="cancel-btn" onClick={() => navigate("/tables")}>
-            Cancel
+            Hủy
           </button>
         </div>
       </form>

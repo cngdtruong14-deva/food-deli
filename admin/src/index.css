@@ -1,8 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
+  /* Luxury Color Palette - Synced with Frontend */
+  --color-primary: #0F172A;        /* Deep Navy */
+  --color-secondary: #1E293B;      /* Slate */
+  --color-accent: #D4AF37;         /* Gold */
   --primary-color: #FF6B00;
   --primary-hover: #E55A00;
+  
   --sidebar-bg: #1e293b;
   --sidebar-hover: #334155;
   --content-bg: #F3F4F6;
@@ -10,19 +15,17 @@
   --text-primary: #1F2937;
   --text-secondary: #6B7280;
   --border-color: #E5E7EB;
-  --success-bg: #D1FAE5;
-  --success-text: #065F46;
-  --warning-bg: #FEF3C7;
-  --warning-text: #92400E;
-  --danger-bg: #FEE2E2;
-  --danger-text: #991B1B;
+  
+  /* Typography */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 * {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
 }
 
 body {
