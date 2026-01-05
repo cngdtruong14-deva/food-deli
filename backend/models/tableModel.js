@@ -14,6 +14,7 @@ const tableSchema = new mongoose.Schema({
     enum: ["Available", "Occupied", "Reserved"], 
     default: "Available" 
   },
+  floor: { type: Number, default: 1 },
   qrCode: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now }
 });

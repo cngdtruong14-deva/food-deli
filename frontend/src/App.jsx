@@ -1,5 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import Navbar from "./components/Navbar/Navbar";
+import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import { Route, Routes, useSearchParams, useNavigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Cart from "./pages/Cart/Cart";
@@ -38,6 +39,7 @@ const App = () => {
     <>
       {showLogin ? <LoginPopup setShowLogin={setShowLogin} /> : <></>}
       <div className="app">
+        <ScrollToTop />
         <ToastContainer />
         <Navbar setShowLogin={setShowLogin} />
         <Routes>

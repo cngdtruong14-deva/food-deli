@@ -1,7 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import "./Navbar.css";
 import { assets } from "../../assets/frontend_assets/assets";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { StoreContext } from "../../context/StoreContext";
 import { toast } from "react-toastify";
 
@@ -10,6 +10,20 @@ const Navbar = ({ setShowLogin }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const { getTotalCartAmount, token, setToken, searchQuery, setSearchQuery } = useContext(StoreContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      if (location.hash === "#explore-menu") setMenu("menu");
+      else if (location.hash === "#app-download") setMenu("mobile-app");
+      else if (location.hash === "#footer") setMenu("contact-us");
+      else setMenu("home");
+    } else if (location.pathname === "/branches") {
+      setMenu("branches");
+    } else {
+      setMenu(""); // De-activate text menu items for other pages like /cart
+    }
+  }, [location]);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -75,7 +89,7 @@ const Navbar = ({ setShowLogin }) => {
           <img src={assets.search_icon} alt="" onClick={() => setShowSearchInput(true)} />
         )}
         <div className="navbar-search-icon">
-          <Link to="/cart">
+          <Link to="/cart" className={location.pathname === "/cart" ? "active" : ""}>
             <img src={assets.basket_icon} alt="" />
           </Link>
           <div className={getTotalCartAmount() === 0 ? "" : "dot"}></div>

@@ -292,27 +292,42 @@ const PlaceOrder = () => {
             {orderMethod === 'dine-in' && !isContextDineIn && selectedBranch && (
               <div className="place-order-card">
                 <h3 className="place-order-card-title">Chọn Bàn</h3>
-                <div className="table-selection-grid">
+                <div className="table-selection-wrapper">
                   {tables.length > 0 ? (
-                    tables.map((table) => {
-                      const isSelected = selectedTable === table._id;
-                      const isAvailable = table.status === "Available";
-                      return (
-                        <div
-                          key={table._id}
-                          className={`table-option ${isSelected ? "selected" : ""} ${!isAvailable ? "occupied" : ""}`}
-                          onClick={() => isAvailable && setSelectedTable(table._id)}
-                        >
-                          <div className="table-number">{table.tableNumber}</div>
-                          <div className="table-capacity">
-                            👤 {table.capacity} người
-                          </div>
-                          <div className="table-status">
-                            {isAvailable ? "Trống" : "Đang dùng"}
-                          </div>
+                    // Group tables by floor
+                    Object.entries(
+                      tables.reduce((acc, table) => {
+                        const floor = table.floor || 1;
+                        if (!acc[floor]) acc[floor] = [];
+                        acc[floor].push(table);
+                        return acc;
+                      }, {})
+                    ).map(([floor, floorTables]) => (
+                      <div key={floor} className="floor-section">
+                        <h4 className="floor-title">Tầng {floor}</h4>
+                        <div className="table-selection-grid">
+                          {floorTables.map((table) => {
+                            const isSelected = selectedTable === table._id;
+                            const isAvailable = table.status === "Available";
+                            return (
+                              <div
+                                key={table._id}
+                                className={`table-option ${isSelected ? "selected" : ""} ${!isAvailable ? "occupied" : ""}`}
+                                onClick={() => isAvailable && setSelectedTable(table._id)}
+                              >
+                                <div className="table-number">{table.tableNumber}</div>
+                                <div className="table-capacity">
+                                  👤 {table.capacity} người
+                                </div>
+                                <div className="table-status">
+                                  {isAvailable ? "Trống" : "Đang dùng"}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })
+                      </div>
+                    ))
                   ) : (
                     <p>Đang tải danh sách bàn hoặc chưa có bàn...</p>
                   )}
