@@ -108,28 +108,36 @@ const Dashboard = ({ url }) => {
           {/* Stat Cards */}
           <div className="stat-cards">
             <div className="stat-card revenue">
-              <div className="stat-icon">💰</div>
+              <div className="stat-icon-container">
+                <div className="stat-icon">💰</div>
+              </div>
               <div className="stat-info">
                 <h3>${stats?.totalSales || 0}</h3>
                 <p>Total Revenue</p>
               </div>
             </div>
             <div className="stat-card orders">
-              <div className="stat-icon">📦</div>
+              <div className="stat-icon-container">
+                <div className="stat-icon">📦</div>
+              </div>
               <div className="stat-info">
                 <h3>{stats?.totalOrders || 0}</h3>
                 <p>Total Orders</p>
               </div>
             </div>
             <div className="stat-card avg">
-              <div className="stat-icon">📈</div>
+              <div className="stat-icon-container">
+                <div className="stat-icon">📈</div>
+              </div>
               <div className="stat-info">
                 <h3>${avgOrderValue}</h3>
                 <p>Avg Order Value</p>
               </div>
             </div>
             <div className="stat-card pending">
-              <div className="stat-icon">⏳</div>
+              <div className="stat-icon-container">
+                <div className="stat-icon">⏳</div>
+              </div>
               <div className="stat-info">
                 <h3>{stats?.pendingOrders || 0}</h3>
                 <p>Pending Orders</p>

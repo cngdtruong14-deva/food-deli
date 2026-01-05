@@ -1,15 +1,37 @@
-.navbar{
+.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 4%;
+    padding: 1rem 2rem;
+    background: var(--card-bg);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 200;
 }
-.navbar .logo{
-    width: max(10%,80px);
+
+.navbar .logo {
+    width: max(10%, 120px);
+    height: auto;
 }
-.navbar .profile{
+
+.navbar .profile {
     width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
-.login-conditon{
-    font-size: 20px;
+
+.navbar .profile:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.login-conditon {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
 }

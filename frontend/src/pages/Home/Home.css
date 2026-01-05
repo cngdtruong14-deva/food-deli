@@ -1,0 +1,13 @@
+/* Add padding for fixed navbar */
+.home-container {
+    padding-top: 1rem;
+}
+
+/* Ensure smooth scrolling */
+#explore-menu {
+    scroll-margin-top: 120px;
+}
+
+#food-display {
+    scroll-margin-top: 120px;
+}

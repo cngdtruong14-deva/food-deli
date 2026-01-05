@@ -127,3 +127,49 @@
 .payment-icon {
     font-size: 20px;
 }
+
+.place-order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.place-order-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.place-order-item:last-child {
+    border-bottom: none;
+}
+
+.place-order-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.place-order-item-info {
+    flex: 1;
+}
+
+.place-order-item-name {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.place-order-item-qty {
+    font-size: 13px;
+    color: #888;
+}
+
+.place-order-item-price {
+    font-weight: 600;
+    color: tomato;
+}

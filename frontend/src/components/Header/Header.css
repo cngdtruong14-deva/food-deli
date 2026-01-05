@@ -1,52 +1,186 @@
-.header{
-    height: 34vw;
-    margin: 30px auto;
-    background: url('/header_img.png') no-repeat;
-    background-size: contain;
+.header {
     position: relative;
+    width: 100vw;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    height: 600px;
+    min-height: 500px;
+    margin-top: 6rem;
+    margin-bottom: 0;
+    overflow: hidden;
+    background: #000;
 }
-.header-contents{
+
+.header-slide {
     position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: 1;
+}
+
+.header-slide.active {
+    opacity: 0.6; /* Slight transparency for text readability */
+}
+
+/* Fallback static background */
+.header-slide.static-bg {
+    background-image: url('/header_img.png');
+}
+
+/* Overlay gradient for better text contrast */
+.header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);
+    z-index: 2;
+}
+
+.header-contents {
+    position: relative;
+    z-index: 3;
     display: flex;
     flex-direction: column;
-    align-items: start;
-    gap: 1.5vw;
-    max-width: 50%;
-    bottom: 10%;
-    left: 6vw;
-    animation: fadeIn 3s;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1200px;
+    height: 100%;
+    padding: 0 2rem;
+    margin: 0 auto;
+    text-align: center;
 }
-.header-contents h2{
-    font-weight: 500;
+
+.slide-title {
+    animation: slideUp 0.8s ease-out forwards;
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    font-weight: 700;
     color: white;
-    font-size: max(4.5vw,22px);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    margin: 0;
+    font-family: var(--font-heading);
 }
-.header-contents p{
-    color: white;
-    font-size: 1vw;
+
+.slide-desc {
+    animation: slideUp 0.8s ease-out 0.2s forwards;
+    color: #f0f0f0;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    max-width: 800px;
+    opacity: 0; /* Starts invisible for animation */
+    line-height: 1.6;
 }
-.header-contents button{
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slider-dots {
+    display: flex;
+    gap: 10px;
+    margin-top: 2rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.dot.active {
+    background: var(--color-accent);
+    transform: scale(1.2);
+}
+
+.header-contents button {
     border: none;
-    color: #747474;
-    font-weight: 500;
-    padding: 1vw 2.3vw;
-    background-color: white;
-    font-size: max(1vw,13px);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #C9A961 100%);
+    color: var(--color-primary);
+    font-weight: 600;
+    padding: 1.25rem 3rem;
+    font-size: clamp(0.95rem, 1.2vw, 1.1rem);
     border-radius: 50px;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+    font-family: var(--font-body);
+    margin-top: 0.5rem;
 }
-@media (max-width:1050px) {
-    .header-contents{
-        max-width: 45%;
+
+.header-contents button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(212, 175, 55, 0.5);
+    background: linear-gradient(135deg, #E5C158 0%, var(--color-accent) 100%);
+}
+
+.header-contents button:active {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+    .header {
+        height: 450px;
+        min-height: 450px;
+        margin-top: 5.5rem;
+    }
+    
+    .header-contents {
+        padding: 3rem 1.5rem;
+        gap: 1.5rem;
     }
 }
-@media (max-width:750px) {
-    .header-contents{
-        max-width: 65%;
+
+@media (max-width: 750px) {
+    .header {
+        height: 400px;
+        min-height: 400px;
+        margin-top: 5rem;
     }
-    .header-contents p{
-        display: none;
+    
+    .header-contents {
+        padding: 2.5rem 1.25rem;
+        gap: 1.25rem;
     }
-    .header-contents button{
-        padding: 2vw 4vw;
+    
+    .header-contents p {
+        font-size: 1rem;
+    }
+    
+    .header-contents button {
+        padding: 1rem 2.5rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        height: 350px;
+        min-height: 350px;
+    }
+    
+    .header-contents {
+        padding: 2rem 1rem;
     }
 }

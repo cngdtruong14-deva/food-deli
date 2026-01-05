@@ -1,43 +1,165 @@
-.add{
-    width: 70%;
-    margin-left: max(5vw,25px);
-    margin-top: 50px;
-    color: #6d6d6d;
+.add {
+    width: 100%;
+    max-width: 900px;
+    margin: 0;
+    color: var(--text-primary);
     font-size: 16px;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-color);
 }
-.add form{
-    gap: 20px;
+
+.add > p {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
 }
-.add-img-upload img{
-    width: 120px;
+
+.add form {
+    gap: 1.5rem;
 }
-.add-product-name, .add-product-description{
-    width: max(40%,280px);
-}
-.add-product-name input, .add-product-description textarea{
-    padding: 10px;
-}
-.add-category-price{
+
+.add-img-upload {
     display: flex;
-    gap: 30px;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+    background: var(--content-bg);
+    transition: all 0.2s ease;
 }
-.add-category-price select, .add-category-price input{
-    max-width: 120px;
-    padding: 10px;
+
+.add-img-upload:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 0, 0.05);
 }
-.add-btn{
-    max-width: 120px;
-    border: none;
-    padding: 10px;
-    background-color: black;
-    color: white;
+
+.add-img-upload img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+}
+
+.add-product-name,
+.add-product-description {
+    width: 100%;
+}
+
+.add-product-name input,
+.add-product-description textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.add-product-name input:focus,
+.add-product-description textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+.add-product-description textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.add-category-price {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.add-category-price select,
+.add-category-price input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: white;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
-@media (max-width:400px) {
-    .add{
-        margin-left: 15px;
+
+.add-category-price select:focus,
+.add-category-price input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+.add-category-price select:hover,
+.add-category-price input:hover {
+    border-color: var(--primary-color);
+}
+
+.add-btn {
+    width: 100%;
+    max-width: 200px;
+    border: none;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 107, 0, 0.4);
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+}
+
+.add-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .add {
+        padding: 1.5rem;
     }
-    .add-product-name, .add-product-description{
-        width: max(40%,220px);
+    
+    .add-category-price {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .add-btn {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    .add {
+        padding: 1.25rem;
+    }
+    
+    .add-img-upload {
+        padding: 1.5rem;
+    }
+    
+    .add-img-upload img {
+        width: 100px;
+        height: 100px;
     }
 }

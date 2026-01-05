@@ -1,80 +1,229 @@
-.explore-menu{
+.explore-menu {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 3rem;
+    margin: 0;
+    padding: 4rem 0;
+    animation: fadeIn 0.8s ease-out;
+    background: linear-gradient(to bottom, #F9FAFB 0%, rgba(255, 237, 213, 0.3) 100%);
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
 }
-.explore-menu h1{
-    color: #262626;
-    font-weight: 600;
+
+.explore-menu-header {
+    text-align: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    width: 100%;
 }
-.explore-menu-text{
-    max-width: 60%;
-    color: #808080;
+
+.explore-menu h1 {
+    font-family: var(--font-heading);
+    color: var(--color-text);
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
 }
-.explore-menu-list{
+
+.explore-menu-text {
+    max-width: 100%;
+    color: var(--color-text-muted);
+    font-size: clamp(1rem, 1.2vw, 1.125rem);
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.explore-menu-list {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 1rem;
     text-align: center;
-    margin: 20px 0px;
-    overflow-x: scroll;
-    padding-bottom: 10px;
+    margin: 2rem 0;
+    overflow-x: auto;
+    padding: 1.5rem 2rem;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
-.explore-menu-list::-webkit-scrollbar{
-    display: none;
+
+.explore-menu-list.sticky {
+    position: sticky;
+    top: 100px;
+    z-index: 100;
+    background: rgba(249, 250, 251, 0.95);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
-.explore-menu-list-item{
+
+.explore-menu-list::-webkit-scrollbar {
+    height: 6px;
+}
+
+.explore-menu-list::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 10px;
+}
+
+.explore-menu-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 10px;
+}
+
+.explore-menu-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-light);
+}
+
+.explore-menu-list-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     cursor: pointer;
-    min-width: 80px;
+    transition: all var(--transition-base);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    background: white;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
-.explore-menu-list-item .category-icon{
-    width: 70px;
-    height: 70px;
+
+.explore-menu-list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-accent-light);
+}
+
+.explore-menu-list-item.active {
+    background: #F97316;
+    color: white;
+    border-color: #F97316;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    transform: translateY(-2px);
+}
+
+.explore-menu-list-item .category-icon {
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
-    background: linear-gradient(135deg, #fff5f0, #ffe8e0);
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    border: 3px solid transparent;
+    margin-right: 0.75rem;
+    transition: all var(--transition-base);
+    color: var(--color-text-muted);
+    flex-shrink: 0;
 }
-.explore-menu-list-item .category-icon:hover{
+
+.explore-menu-list-item.active .category-icon {
+    color: white;
+}
+
+.explore-menu-list-item:hover .category-icon {
+    color: var(--color-accent);
+}
+
+.explore-menu-list-item .category-icon svg {
+    width: 24px;
+    height: 24px;
+    transition: transform var(--transition-base);
+}
+
+.explore-menu-list-item:hover .category-icon svg,
+.explore-menu-list-item.active .category-icon svg {
     transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
 }
-.explore-menu-list-item .category-icon.active{
-    border: 3px solid #ff6b35;
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-}
-.explore-menu-list-item p{
-    margin-top: 10px;
-    color: #555;
-    font-size: 13px;
+
+.explore-menu-list-item p {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 0.9375rem;
     font-weight: 500;
     white-space: nowrap;
+    transition: color var(--transition-base);
+    font-family: var(--font-body);
 }
-.explore-menu hr{
-    margin: 10px 0px;
-    height: 2px;
-    background-color: #e2e2e2;
-    border: none;
+
+.explore-menu-list-item:hover p {
+    color: var(--color-accent);
 }
-@media (max-width:1050px) {
-    .explore-menu-text{
-        max-width: 100%;
-        font-size: 14px;
+
+.explore-menu-list-item.active p {
+    color: white;
+    font-weight: 600;
+}
+
+@media (max-width: 1050px) {
+    .explore-menu {
+        padding: 3rem 0;
     }
-    .explore-menu-list-item .category-icon{
-        width: 60px;
-        height: 60px;
-        font-size: 26px;
+    
+    .explore-menu-header {
+        padding: 0 1.5rem;
     }
-    .explore-menu-list-item p{
-        font-size: 11px;
+    
+    .explore-menu-text {
+        font-size: 1rem;
+    }
+    
+    .explore-menu-list {
+        padding: 1.25rem 1.5rem;
+        gap: 0.875rem;
+    }
+    
+    .explore-menu-list-item {
+        padding: 0.625rem 1.25rem;
+    }
+    
+    .explore-menu-list-item p {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 750px) {
+    .explore-menu {
+        padding: 2.5rem 0;
+    }
+    
+    .explore-menu-header {
+        padding: 0 1rem;
+    }
+    
+    .explore-menu-list {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+    
+    .explore-menu-list-item {
+        padding: 0.5rem 1rem;
+    }
+    
+    .explore-menu-list-item .category-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.5rem;
+    }
+    
+    .explore-menu-list-item .category-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .explore-menu-list-item p {
+        font-size: 0.8125rem;
     }
 }

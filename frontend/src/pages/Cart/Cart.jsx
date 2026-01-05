@@ -38,9 +38,9 @@ const Cart = () => {
                 <div className="cart-items-title cart-items-item">
                   <img src={url + "/images/" + item.image} alt="" />
                   <p>{item.name}</p>
-                  <p>${item.price}</p>
+                  <p>{item.price.toLocaleString('vi-VN')} đ</p>
                   <p>{cartItems[item._id]}</p>
-                  <p>${item.price * cartItems[item._id]}</p>
+                  <p>{(item.price * cartItems[item._id]).toLocaleString('vi-VN')} đ</p>
                   <p onClick={() => removeFromCart(item._id)} className="cross">
                     x
                   </p>
@@ -57,17 +57,17 @@ const Cart = () => {
           <div>
             <div className="cart-total-details">
               <p>Tạm tính</p>
-              <p>${getTotalCartAmount()}</p>
+              <p>{getTotalCartAmount().toLocaleString('vi-VN')} đ</p>
             </div>
             <hr />
             <div className="cart-total-details">
               <p>{isDineIn ? "Phí phục vụ" : "Phí giao hàng"}</p>
-              <p>${isDineIn ? 0 : getTotalCartAmount() === 0 ? 0 : 2}</p>
+              <p>{isDineIn ? "0 đ" : getTotalCartAmount() === 0 ? "0 đ" : "15.000 đ"}</p>
             </div>
             <hr />
             <div className="cart-total-details">
               <b>Tổng cộng</b>
-              <b>${getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + (isDineIn ? 0 : 2)}</b>
+              <b>{getTotalCartAmount() === 0 ? "0 đ" : (getTotalCartAmount() + (isDineIn ? 0 : 15000)).toLocaleString('vi-VN')} đ</b>
             </div>
           </div>
           <button onClick={() => navigate('/order')}>TIẾN HÀNH THANH TOÁN</button>

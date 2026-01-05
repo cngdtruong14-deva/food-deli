@@ -9,10 +9,14 @@ import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Debug Env Path
+const envPath = path.join(__dirname, "../.env");
+console.log("Loading .env from:", envPath);
+dotenv.config({ path: envPath });
+console.log("MONGO_URL:", process.env.MONGO_URL);
 
 // Import models
 import categoryModel from "../models/categoryModel.js";
@@ -44,11 +48,69 @@ const REFINED_CATEGORIES = [
   { id: "cat-003", name: "Đồ Uống", description: "Bia, nước ngọt, nước ép", icon: "🍺" },
 ];
 
+// Load descriptions if available
+let descriptionsMap = {};
+try {
+  const descriptionsPath = path.resolve(__dirname, '../descriptions.json');
+  if (fs.existsSync(descriptionsPath)) {
+    descriptionsMap = JSON.parse(fs.readFileSync(descriptionsPath, 'utf8'));
+    console.log(`Loaded ${Object.keys(descriptionsMap).length} descriptions from descriptions.json`);
+  }
+} catch (error) {
+  console.log('Could not load descriptions.json, falling back to smart generation', error.message);
+}
+
+function cleanDescription(text) {
+  if (!text) return "";
+  // Remove boilerplate footer
+  let cleaned = text.split("Trong quá trình dùng món")[0];
+  cleaned = cleaned.split("Giá chưa gồm VAT")[0];
+  cleaned = cleaned.split("Bên cạnh đó, nếu quý khách có nhu cầu")[0];
+  
+  // Remove boilerplate header if present
+  cleaned = cleaned.replace(/^Mô tả món ăn\s*/i, "");
+
+  // Format bullet points (replace " - " or "- " with newline + bullet)
+  // Look for patterns where a hyphen is preceded by a space or start of line, and followed by text
+  cleaned = cleaned.replace(/(\s+-\s+)|(^\s*-\s+)/g, "\n- ");
+  
+  // Also split major sections if they are just run-on sentences (heuristic)
+  cleaned = cleaned.replace(/\.\s+([A-ZÀ-Ỹ])/g, ".\n$1");
+
+  return cleaned.trim();
+}
+
+function generateDescription(name, categoryId) {
+  // Check strict map first
+  if (descriptionsMap[name]) {
+    const cleaned = cleanDescription(descriptionsMap[name]);
+    if (cleaned.length > 10) return cleaned;
+  }
+  
+  const lowerName = name.toLowerCase();
+  
+  if (lowerName.includes("combo")) return "Combo tiết kiệm với đầy đủ các món đặc sắc, phù hợp cho nhóm 4-6 người, đảm bảo no nê và trọn vẹn hương vị.";
+  if (lowerName.includes("lẩu")) return "Nước dùng hầm xương ngọt thanh, đậm đà hương vị thảo mộc, nhúng kèm thịt bò Mỹ, hải sản tươi sống và rau xanh theo mùa.";
+  if (lowerName.includes("gà") || lowerName.includes("cánh")) return "Gà ri thả vườn chắc thịt, da giòn vàng ươm, tẩm ướp gia vị Tây Bắc đặc trưng, chấm cùng muối tiêu chanh.";
+  if (lowerName.includes("ếch")) return "Thịt ếch đồng tươi ngon, chắc thịt, chế biến đậm đà, thơm lừng mùi lá lốt và sả ớt.";
+  if (lowerName.includes("cá")) return "Cá tươi sống bắt tại bể, thịt trắng ngần ngọt vị tự nhiên, chế biến cầu kỳ giữ trọn hương vị tươi ngon nhất.";
+  if (lowerName.includes("tôm") || lowerName.includes("mực") || lowerName.includes("hải sản") || lowerName.includes("ốc")) return "Hải sản tươi sống nhập mới mỗi ngày, chế biến đa dạng từ hấp sả, nướng mỡ hành đến sốt Thái chua cay.";
+  if (lowerName.includes("nướng")) return "Nướng trên than hoa thơm lừng, thịt mềm mọng nước, tẩm ướp sốt nướng độc quyền của quán.";
+  if (lowerName.includes("bò") || lowerName.includes("trâu")) return "Thịt tươi mềm, không dai, xào lăn hoặc nhúng mẻ đều tuyệt hảo, giữ trọn vị ngọt tự nhiên.";
+  if (lowerName.includes("heo") || lowerName.includes("lợn") || lowerName.includes("dồi")) return "Đặc sản lợn mán mẹt, thịt thơm bì giòn, ăn kèm rau rừng và mắm tôm chuẩn vị.";
+  if (lowerName.includes("rau") || lowerName.includes("nộm") || lowerName.includes("salad")) return "Rau củ tươi mát, giòn ngon, trộn sốt chua ngọt kích thích vị giác, giải ngấy cực tốt.";
+  if (lowerName.includes("khoai") || lowerName.includes("ngô")) return "Món ăn vặt khoái khẩu, chiên vàng giòn rụm, lắc phô mai béo ngậy.";
+  if (lowerName.includes("bia") || lowerName.includes("rượu")) return "Đồ uống mát lạnh, sảng khoái, là chất xúc tác không thể thiếu cho mọi cuộc vui.";
+  
+  return `Món ${name} chế biến theo công thức độc quyền của Bếp trưởng, mang đến hương vị khó quên.`;
+}
+
 function categorizeProduct(product) {
   const name = product.name.toLowerCase();
   
   // Combo
   if (name.includes("combo")) return "cat-combo";
+  // ... rest of functionality
   
   // Drinks
   if (name.includes("bia") || name.includes("nước") || name.includes("trà") || 
@@ -115,28 +177,32 @@ async function seedData() {
     let count = 0;
     
     for (const product of menuData.products) {
-      // Convert VND to USD (1 USD ≈ 25000 VND)
-      const priceUSD = Math.round(product.price / 25000 * 100) / 100;
-      
+      // Use VND price directly
+      const priceVND = product.price;
+
       // Determine refined category
       const refinedCategoryId = categorizeProduct(product);
       
-      // Create slug for image name
+      // Create slug for image name - Preserve accents to match existing files
       const imageSlug = product.name
         .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/đ/g, "d")
-        .replace(/Đ/g, "D")
-        .replace(/\s+/g, "_")
-        .replace(/[^a-z0-9_]/g, "");
+        .replace(/\s+/g, "_");
+      
+      const imageFileName = `${imageSlug}.jpg`;
+      const imagePath = path.join(__dirname, "../uploads", imageFileName);
+
+      // Check if image exists
+      if (!fs.existsSync(imagePath)) {
+        console.log(`  ! Skipped ${product.name} (Missing image: ${imageFileName})`);
+        continue; 
+      }
       
       await foodModel.create({
         name: product.name,
-        description: product.description || `Món ${product.name} đặc biệt`,
-        price: priceUSD,
+        description: generateDescription(product.name, refinedCategoryId),
+        price: priceVND,
         category: categoryMap[refinedCategoryId],
-        image: `${imageSlug}.jpg`,
+        image: imageFileName,
         isAvailable: product.status === "available",
         stock: 100,
         trackStock: true

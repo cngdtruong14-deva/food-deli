@@ -56,7 +56,7 @@ const PlaceOrder = () => {
 
     let orderData = {
       items: orderItems,
-      amount: getTotalCartAmount() + (isDineIn ? 0 : 2),
+      amount: getTotalCartAmount() + (isDineIn ? 0 : 15000),
       orderType: orderType,
       paymentMethod: paymentMethod,
     };
@@ -130,94 +130,29 @@ const PlaceOrder = () => {
         )}
 
         <p className="title">
-          {isDineIn ? "Thông tin khách hàng" : "Thông tin giao hàng"}
+          Các món đã chọn
         </p>
 
-        <div className="multi-fields">
-          <input
-            required
-            name="firstName"
-            value={data.firstName}
-            onChange={onChangeHandler}
-            type="text"
-            placeholder="Họ"
-          />
-          <input
-            required
-            name="lastName"
-            value={data.lastName}
-            onChange={onChangeHandler}
-            type="text"
-            placeholder="Tên"
-          />
+        <div className="place-order-items">
+          {food_list.map((item, index) => {
+            if (cartItems[item._id] > 0) {
+              return (
+                <div key={index} className="place-order-item">
+                  <img src={url + "/images/" + item.image} alt="" />
+                  <div className="place-order-item-info">
+                    <p className="place-order-item-name">{item.name}</p>
+                    <p className="place-order-item-qty">
+                      {cartItems[item._id]} x {item.price.toLocaleString('vi-VN')} đ
+                    </p>
+                  </div>
+                  <p className="place-order-item-price">
+                    {(item.price * cartItems[item._id]).toLocaleString('vi-VN')} đ
+                  </p>
+                </div>
+              )
+            }
+          })}
         </div>
-
-        <input
-          required
-          name="email"
-          value={data.email}
-          onChange={onChangeHandler}
-          type="email"
-          placeholder="Email"
-        />
-
-        <input
-          required
-          name="phone"
-          value={data.phone}
-          onChange={onChangeHandler}
-          type="text"
-          placeholder="Số điện thoại"
-        />
-
-        {!isDineIn && (
-          <>
-            <input
-              required
-              name="street"
-              value={data.street}
-              onChange={onChangeHandler}
-              type="text"
-              placeholder="Địa chỉ"
-            />
-            <div className="multi-fields">
-              <input
-                required
-                name="city"
-                value={data.city}
-                onChange={onChangeHandler}
-                type="text"
-                placeholder="Thành phố"
-              />
-              <input
-                required
-                name="state"
-                value={data.state}
-                onChange={onChangeHandler}
-                type="text"
-                placeholder="Quận/Huyện"
-              />
-            </div>
-            <div className="multi-fields">
-              <input
-                required
-                name="zipcode"
-                value={data.zipcode}
-                onChange={onChangeHandler}
-                type="text"
-                placeholder="Mã bưu điện"
-              />
-              <input
-                required
-                name="country"
-                value={data.country}
-                onChange={onChangeHandler}
-                type="text"
-                placeholder="Quốc gia"
-              />
-            </div>
-          </>
-        )}
       </div>
 
       <div className="place-order-right">
@@ -226,21 +161,20 @@ const PlaceOrder = () => {
           <div>
             <div className="cart-total-details">
               <p>Tạm tính</p>
-              <p>${getTotalCartAmount()}</p>
+              <p>{getTotalCartAmount().toLocaleString('vi-VN')} đ</p>
             </div>
             <hr />
             <div className="cart-total-details">
               <p>{isDineIn ? "Phí phục vụ" : "Phí giao hàng"}</p>
-              <p>${isDineIn ? 0 : getTotalCartAmount() === 0 ? 0 : 2}</p>
+              <p>{isDineIn ? "0 đ" : getTotalCartAmount() === 0 ? "0 đ" : "15.000 đ"}</p>
             </div>
             <hr />
             <div className="cart-total-details">
               <b>Tổng cộng</b>
               <b>
-                $
                 {getTotalCartAmount() === 0
-                  ? 0
-                  : getTotalCartAmount() + (isDineIn ? 0 : 2)}
+                  ? "0 đ"
+                  : (getTotalCartAmount() + (isDineIn ? 0 : 15000)).toLocaleString('vi-VN') + " đ"}
               </b>
             </div>
           </div>

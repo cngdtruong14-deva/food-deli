@@ -10,6 +10,7 @@ const StoreContextProvider = (props) => {
   const [token, setToken] = useState("");
   const [food_list, setFoodList] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Dine-in context
   const [tableId, setTableId] = useState(null);
@@ -159,6 +160,8 @@ const StoreContextProvider = (props) => {
     tableName,
     setDineInContext,
     clearDineInContext,
+    searchQuery,
+    setSearchQuery,
   };
   
   return (

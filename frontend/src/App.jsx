@@ -6,6 +6,7 @@ import Cart from "./pages/Cart/Cart";
 import PlaceOrder from "./pages/PlaceOrder/PlaceOrder";
 import Footer from "./components/Footer/Footer";
 import LoginPopup from "./components/LoginPopup/LoginPopup";
+import CartFAB from "./components/CartFAB/CartFAB";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Verify from "./pages/Verify/Verify";
@@ -47,6 +48,7 @@ const App = () => {
           <Route path="/myorders" element={<MyOrders />} />
         </Routes>
       </div>
+      <CartFAB />
       <Footer />
     </>
   );

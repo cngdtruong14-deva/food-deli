@@ -1,32 +1,72 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-*{
+:root {
+  --primary-color: #FF6B00;
+  --primary-hover: #E55A00;
+  --sidebar-bg: #1e293b;
+  --sidebar-hover: #334155;
+  --content-bg: #F3F4F6;
+  --card-bg: #FFFFFF;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --border-color: #E5E7EB;
+  --success-bg: #D1FAE5;
+  --success-text: #065F46;
+  --warning-bg: #FEF3C7;
+  --warning-text: #92400E;
+  --danger-bg: #FEE2E2;
+  --danger-text: #991B1B;
+}
+
+* {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-    font-family: 'Be Vietnam Pro', sans-serif;
+    font-family: 'Inter', sans-serif;
 }
-body{
+
+body {
     min-height: 100vh;
-    background-color: #fcfcfc;
+    background-color: var(--content-bg);
+    color: var(--text-primary);
 }
-a{
+
+a {
     text-decoration: none;
     color: inherit;
 }
-hr{
+
+hr {
     border: none;
     height: 1px;
-    background-color: #a9a9a9;
+    background-color: var(--border-color);
 }
-.app-content{
+
+.app-content {
     display: flex;
+    min-height: calc(100vh - 60px);
 }
-.flex-col{
+
+.flex-col {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-.cursor{
+
+.cursor {
     cursor: pointer;
+}
+
+/* Main content area styling */
+.app-content > *:last-child {
+    flex: 1;
+    background-color: var(--content-bg);
+    padding: 2rem;
+    min-height: calc(100vh - 60px);
+    overflow-x: auto;
+}
+
+/* Remove hr styling for cleaner look */
+.app-content > hr {
+    display: none;
 }
