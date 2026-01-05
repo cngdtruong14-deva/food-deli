@@ -1,0 +1,97 @@
+.table-format {
+  grid-template-columns: 1fr 1fr 1fr 1.5fr 0.8fr;
+}
+
+.branch-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.branch-filter select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+.qr-btn {
+  padding: 6px 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.qr-btn:hover {
+  background-color: #2980b9;
+}
+
+.status-available {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.status-occupied {
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+.status-reserved {
+  color: #f39c12;
+  font-weight: 500;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cancel-btn {
+  max-width: 120px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.remove-btn {
+  color: #e74c3c;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  text-decoration: underline;
+}
+
+.empty-message {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.list-header p {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+h2 {
+  margin-bottom: 10px;
+  color: #333;
+}

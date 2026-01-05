@@ -9,6 +9,37 @@ const StoreContextProvider = (props) => {
   const url = "http://localhost:4000";
   const [token, setToken] = useState("");
   const [food_list, setFoodList] = useState([]);
+  const [categories, setCategories] = useState([]);
+  
+  // Dine-in context
+  const [tableId, setTableId] = useState(null);
+  const [branchId, setBranchId] = useState(null);
+  const [orderType, setOrderType] = useState("Delivery");
+  const [tableName, setTableName] = useState("");
+
+  // Set dine-in context from QR scan
+  const setDineInContext = (newTableId, newBranchId, tableNumber = "") => {
+    setTableId(newTableId);
+    setBranchId(newBranchId);
+    setOrderType("Dine-in");
+    setTableName(tableNumber);
+    
+    localStorage.setItem("dineInSession", JSON.stringify({
+      tableId: newTableId,
+      branchId: newBranchId,
+      orderType: "Dine-in",
+      tableName: tableNumber
+    }));
+  };
+
+  // Clear dine-in context
+  const clearDineInContext = () => {
+    setTableId(null);
+    setBranchId(null);
+    setOrderType("Delivery");
+    setTableName("");
+    localStorage.removeItem("dineInSession");
+  };
 
   const addToCart = async (itemId) => {
     if (!cartItems[itemId]) {
@@ -17,15 +48,15 @@ const StoreContextProvider = (props) => {
       setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
     }
     if (token) {
-      const response=await axios.post(
+      const response = await axios.post(
         url + "/api/cart/add",
         { itemId },
         { headers: { token } }
       );
-      if(response.data.success){
-        toast.success("item Added to Cart")
-      }else{
-        toast.error("Something went wrong")
+      if (response.data.success) {
+        toast.success("Đã thêm vào giỏ hàng");
+      } else {
+        toast.error("Có lỗi xảy ra");
       }
     }
   };
@@ -33,15 +64,15 @@ const StoreContextProvider = (props) => {
   const removeFromCart = async (itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
     if (token) {
-      const response= await axios.post(
+      const response = await axios.post(
         url + "/api/cart/remove",
         { itemId },
         { headers: { token } }
       );
-      if(response.data.success){
-        toast.success("item Removed from Cart")
-      }else{
-        toast.error("Something went wrong")
+      if (response.data.success) {
+        toast.success("Đã xóa khỏi giỏ hàng");
+      } else {
+        toast.error("Có lỗi xảy ra");
       }
     }
   };
@@ -51,7 +82,9 @@ const StoreContextProvider = (props) => {
     for (const item in cartItems) {
       if (cartItems[item] > 0) {
         let itemInfo = food_list.find((product) => product._id === item);
-        totalAmount += itemInfo.price * cartItems[item];
+        if (itemInfo) {
+          totalAmount += itemInfo.price * cartItems[item];
+        }
       }
     }
     return totalAmount;
@@ -62,7 +95,14 @@ const StoreContextProvider = (props) => {
     if (response.data.success) {
       setFoodList(response.data.data);
     } else {
-      alert("Error! Products are not fetching..");
+      alert("Lỗi! Không thể tải sản phẩm..");
+    }
+  };
+
+  const fetchCategories = async () => {
+    const response = await axios.get(url + "/api/food/categories");
+    if (response.data.success) {
+      setCategories(response.data.data);
     }
   };
 
@@ -78,9 +118,24 @@ const StoreContextProvider = (props) => {
   useEffect(() => {
     async function loadData() {
       await fetchFoodList();
+      await fetchCategories();
       if (localStorage.getItem("token")) {
         setToken(localStorage.getItem("token"));
         await loadCardData(localStorage.getItem("token"));
+      }
+      
+      // Restore dine-in session from localStorage
+      const savedSession = localStorage.getItem("dineInSession");
+      if (savedSession) {
+        try {
+          const session = JSON.parse(savedSession);
+          setTableId(session.tableId);
+          setBranchId(session.branchId);
+          setOrderType(session.orderType);
+          setTableName(session.tableName || "");
+        } catch (e) {
+          console.error("Error parsing dineInSession", e);
+        }
       }
     }
     loadData();
@@ -88,6 +143,7 @@ const StoreContextProvider = (props) => {
 
   const contextValue = {
     food_list,
+    categories,
     cartItems,
     setCartItems,
     addToCart,
@@ -96,11 +152,20 @@ const StoreContextProvider = (props) => {
     url,
     token,
     setToken,
+    // Dine-in context
+    tableId,
+    branchId,
+    orderType,
+    tableName,
+    setDineInContext,
+    clearDineInContext,
   };
+  
   return (
     <StoreContext.Provider value={contextValue}>
       {props.children}
     </StoreContext.Provider>
   );
 };
+
 export default StoreContextProvider;

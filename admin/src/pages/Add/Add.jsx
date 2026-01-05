@@ -1,23 +1,33 @@
-import React, { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import "./Add.css";
 import { assets } from "../../assets/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
-import { useEffect } from "react";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const Add = ({url}) => {
-  const navigate=useNavigate();
-  const {token,admin} = useContext(StoreContext);
+const Add = ({ url }) => {
+  const navigate = useNavigate();
+  const { token, admin } = useContext(StoreContext);
   const [image, setImage] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [data, setData] = useState({
     name: "",
     description: "",
     price: "",
-    category: "Salad",
+    category: "",
+    stock: 100,
   });
+
+  const fetchCategories = async () => {
+    const response = await axios.get(`${url}/api/food/categories`);
+    if (response.data.success) {
+      setCategories(response.data.data);
+      if (response.data.data.length > 0) {
+        setData((prev) => ({ ...prev, category: response.data.data[0]._id }));
+      }
+    }
+  };
 
   const onChangeHandler = (event) => {
     const name = event.target.name;
@@ -31,16 +41,20 @@ const Add = ({url}) => {
     formData.append("name", data.name);
     formData.append("description", data.description);
     formData.append("price", Number(data.price));
-    formData.append("category", data.category);
+    formData.append("categoryId", data.category);
+    formData.append("stock", Number(data.stock));
     formData.append("image", image);
 
-    const response = await axios.post(`${url}/api/food/add`, formData,{headers:{token}});
+    const response = await axios.post(`${url}/api/food/add`, formData, {
+      headers: { token },
+    });
     if (response.data.success) {
       setData({
         name: "",
         description: "",
         price: "",
-        category: "Salad",
+        category: categories.length > 0 ? categories[0]._id : "",
+        stock: 100,
       });
       setImage(false);
       toast.success(response.data.message);
@@ -48,12 +62,15 @@ const Add = ({url}) => {
       toast.error(response.data.message);
     }
   };
-  useEffect(()=>{
-    if(!admin && !token){
+
+  useEffect(() => {
+    if (!admin && !token) {
       toast.error("Please Login First");
-       navigate("/");
+      navigate("/");
     }
-  },[])
+    fetchCategories();
+  }, []);
+
   return (
     <div className="add">
       <form onSubmit={onSubmitHandler} className="flex-col">
@@ -104,14 +121,11 @@ const Add = ({url}) => {
               onChange={onChangeHandler}
               value={data.category}
             >
-              <option value="Salad">Salad</option>
-              <option value="Rolls">Rolls</option>
-              <option value="Deserts">Deserts</option>
-              <option value="Sandwich">Sandwich</option>
-              <option value="Cake">Cake</option>
-              <option value="Pure Veg">Pure Veg</option>
-              <option value="Pasta">Pasta</option>
-              <option value="Noodles">Noodles</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="add-price flex-col">
@@ -123,6 +137,17 @@ const Add = ({url}) => {
               name="price"
               placeholder="$20"
               required
+            />
+          </div>
+          <div className="add-price flex-col">
+            <p>Stock</p>
+            <input
+              onChange={onChangeHandler}
+              value={data.stock}
+              type="Number"
+              name="stock"
+              placeholder="100"
+              min="0"
             />
           </div>
         </div>

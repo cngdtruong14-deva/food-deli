@@ -8,14 +8,15 @@ import { toast } from "react-toastify";
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
   const { getTotalCartAmount, token, setToken } = useContext(StoreContext);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
-  const logout=()=>{
+  const logout = () => {
     localStorage.removeItem("token");
     setToken("");
-    toast.success("Logout Successfully")
+    toast.success("Đăng xuất thành công");
     navigate("/");
-  }
+  };
+
   return (
     <div className="navbar">
       <Link to="/">
@@ -27,28 +28,28 @@ const Navbar = ({ setShowLogin }) => {
           onClick={() => setMenu("home")}
           className={menu === "home" ? "active" : ""}
         >
-          home
+          Trang Chủ
         </Link>
         <a
           href="#explore-menu"
           onClick={() => setMenu("menu")}
           className={menu === "menu" ? "active" : ""}
         >
-          menu
+          Thực Đơn
         </a>
         <a
           href="#app-download"
           onClick={() => setMenu("mobile-app")}
           className={menu === "mobile-app" ? "active" : ""}
         >
-          mobile-app
+          Ứng Dụng
         </a>
         <a
           href="#footer"
           onClick={() => setMenu("contact-us")}
           className={menu === "contact-us" ? "active" : ""}
         >
-          contact us
+          Liên Hệ
         </a>
       </ul>
       <div className="navbar-right">
@@ -60,14 +61,20 @@ const Navbar = ({ setShowLogin }) => {
           <div className={getTotalCartAmount() === 0 ? "" : "dot"}></div>
         </div>
         {!token ? (
-          <button onClick={() => setShowLogin(true)}>sign in</button>
+          <button onClick={() => setShowLogin(true)}>Đăng Nhập</button>
         ) : (
           <div className="navbar-profile">
             <img src={assets.profile_icon} alt="" />
             <ul className="nav-profile-dropdown">
-              <li onClick={()=>navigate("/myorders")}><img src={assets.bag_icon} alt="" /><p>Orders</p></li>
+              <li onClick={() => navigate("/myorders")}>
+                <img src={assets.bag_icon} alt="" />
+                <p>Đơn Hàng</p>
+              </li>
               <hr />
-              <li onClick={logout}><img src={assets.logout_icon} alt="" /><p>Logout</p></li>
+              <li onClick={logout}>
+                <img src={assets.logout_icon} alt="" />
+                <p>Đăng Xuất</p>
+              </li>
             </ul>
           </div>
         )}

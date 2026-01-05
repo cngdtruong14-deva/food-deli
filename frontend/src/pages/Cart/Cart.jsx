@@ -11,30 +11,32 @@ const Cart = () => {
     addToCart,
     removeFromCart,
     getTotalCartAmount,
-    url
+    url,
+    orderType
   } = useContext(StoreContext);
 
-  const navigate=useNavigate();
+  const navigate = useNavigate();
+  const isDineIn = orderType === "Dine-in";
 
   return (
     <div className="cart">
       <div className="cart-items">
         <div className="cart-items-title">
-          <p>Items</p>
-          <p>Title</p>
-          <p>Price</p>
-          <p>Quantity</p>
-          <p>Total</p>
-          <p>Remove</p>
+          <p>Hình ảnh</p>
+          <p>Tên món</p>
+          <p>Giá</p>
+          <p>Số lượng</p>
+          <p>Thành tiền</p>
+          <p>Xóa</p>
         </div>
         <br />
         <hr />
         {food_list.map((item, index) => {
           if (cartItems[item._id] > 0) {
             return (
-              <div>
+              <div key={item._id}>
                 <div className="cart-items-title cart-items-item">
-                  <img src={url+"/images/"+item.image} alt="" />
+                  <img src={url + "/images/" + item.image} alt="" />
                   <p>{item.name}</p>
                   <p>${item.price}</p>
                   <p>{cartItems[item._id]}</p>
@@ -51,31 +53,31 @@ const Cart = () => {
       </div>
       <div className="cart-bottom">
         <div className="cart-total">
-          <h2>Cart Totals</h2>
+          <h2>Tổng giỏ hàng</h2>
           <div>
             <div className="cart-total-details">
-              <p>Subtotals</p>
+              <p>Tạm tính</p>
               <p>${getTotalCartAmount()}</p>
             </div>
             <hr />
             <div className="cart-total-details">
-              <p>Delivery Fee</p>
-              <p>${getTotalCartAmount()===0?0:2}</p>
+              <p>{isDineIn ? "Phí phục vụ" : "Phí giao hàng"}</p>
+              <p>${isDineIn ? 0 : getTotalCartAmount() === 0 ? 0 : 2}</p>
             </div>
             <hr />
             <div className="cart-total-details">
-              <b>Total</b>
-              <b>${getTotalCartAmount()===0?0:getTotalCartAmount()+2}</b>
+              <b>Tổng cộng</b>
+              <b>${getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + (isDineIn ? 0 : 2)}</b>
             </div>
           </div>
-          <button onClick={()=>navigate('/order')}>PROCEED TO CHECKOUT</button>
+          <button onClick={() => navigate('/order')}>TIẾN HÀNH THANH TOÁN</button>
         </div>
         <div className="cart-promocode">
           <div>
-            <p>If you have a promocode, Enter it here</p>
+            <p>Nếu bạn có mã giảm giá, nhập tại đây</p>
             <div className="cart-promocode-input">
-              <input type="text" placeholder="promo code" />
-              <button>Submit</button>
+              <input type="text" placeholder="Mã giảm giá" />
+              <button>Áp dụng</button>
             </div>
           </div>
         </div>

@@ -42,3 +42,88 @@
         font-size: 27px;
     }
 }
+
+/* Dine-in Badge */
+.dine-in-badge {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    color: white;
+    text-align: center;
+}
+
+.dine-in-badge .badge {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.dine-in-badge .table-info {
+    margin: 8px 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.dine-in-badge .clear-session {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.dine-in-badge .clear-session:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Payment Method */
+.payment-method {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.payment-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.payment-options {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.payment-option:hover {
+    border-color: #ff6b35;
+}
+
+.payment-option.selected {
+    border-color: #ff6b35;
+    background-color: #fff5f2;
+}
+
+.payment-option input[type="radio"] {
+    display: none;
+}
+
+.payment-icon {
+    font-size: 20px;
+}

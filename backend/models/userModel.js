@@ -6,12 +6,16 @@ const userSchema = new mongoose.Schema(
     email: { type: String, unique: true, sparse: true },
     phone: { type: String, unique: true, sparse: true },
     password: { type: String },
-    role: { type: String, default: "user" },
+    role: { 
+      type: String, 
+      enum: ["customer", "staff", "manager", "admin"], 
+      default: "customer" 
+    },
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: "branch", default: null },
     cartData: { type: Object, default: {} },
   },
   { minimize: false }
 );
 
-const userModel = mongoose.model.user || mongoose.model("user", userSchema);
+const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 export default userModel;
-

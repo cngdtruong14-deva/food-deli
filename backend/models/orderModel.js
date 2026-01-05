@@ -2,11 +2,27 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
   userId: { type: String, required: true },
+  branchId: { type: mongoose.Schema.Types.ObjectId, ref: "branch", default: null },
+  tableId: { type: mongoose.Schema.Types.ObjectId, ref: "table", default: null },
+  orderType: { 
+    type: String, 
+    enum: ["Delivery", "Dine-in", "Takeaway"], 
+    default: "Delivery" 
+  },
+  paymentMethod: {
+    type: String,
+    enum: ["Stripe", "Cash"],
+    default: "Stripe"
+  },
   items: { type: Array, required: true },
   amount: { type: Number, required: true },
-  address: { type: Object, required: true },
-  status: { type: String, default: "Food Processing" },
-  date: { type: Date, default: Date.now() },
+  address: { type: Object, default: {} },
+  status: { 
+    type: String, 
+    enum: ["Pending", "Confirmed", "Preparing", "Served", "Paid", "Cancelled"],
+    default: "Pending" 
+  },
+  date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
 });
 

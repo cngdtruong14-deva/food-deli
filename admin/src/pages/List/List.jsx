@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 const List = ({ url }) => {
   const navigate = useNavigate();
-  const { token,admin } = useContext(StoreContext);
+  const { token, admin } = useContext(StoreContext);
   const [list, setList] = useState([]);
 
   const fetchList = async () => {
@@ -16,7 +16,7 @@ const List = ({ url }) => {
     if (response.data.success) {
       setList(response.data.data);
     } else {
-      toast.error("Error");
+      toast.error("Lỗi tải danh sách");
     }
   };
 
@@ -28,14 +28,15 @@ const List = ({ url }) => {
     );
     await fetchList();
     if (response.data.success) {
-      toast.success(response.data.message);
+      toast.success("Đã xóa món ăn");
     } else {
-      toast.error("Error");
+      toast.error("Có lỗi xảy ra");
     }
   };
+
   useEffect(() => {
     if (!admin && !token) {
-      toast.error("Please Login First");
+      toast.error("Vui lòng đăng nhập trước");
       navigate("/");
     }
     fetchList();
@@ -43,14 +44,15 @@ const List = ({ url }) => {
 
   return (
     <div className="list add flex-col">
-      <p>All Food List</p>
+      <p>Danh sách món ăn ({list.length} món)</p>
       <div className="list-table">
         <div className="list-table-format title">
-          <b>Image</b>
-          <b>Name</b>
-          <b>Category</b>
-          <b>Price</b>
-          <b>Action</b>
+          <b>Hình ảnh</b>
+          <b>Tên món</b>
+          <b>Danh mục</b>
+          <b>Giá</b>
+          <b>Tồn kho</b>
+          <b>Thao tác</b>
         </div>
         {list.map((item, index) => {
           return (
@@ -59,8 +61,9 @@ const List = ({ url }) => {
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>${item.price}</p>
+              <p>{item.stock || 100}</p>
               <p onClick={() => removeFood(item._id)} className="cursor">
-                X
+                Xóa
               </p>
             </div>
           );

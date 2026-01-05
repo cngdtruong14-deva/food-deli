@@ -1,0 +1,214 @@
+import { useState, useEffect, useContext } from "react";
+import "./Dashboard.css";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { StoreContext } from "../../context/StoreContext";
+import { useNavigate } from "react-router-dom";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+
+const Dashboard = ({ url }) => {
+  const navigate = useNavigate();
+  const { token, admin } = useContext(StoreContext);
+  const [stats, setStats] = useState(null);
+  const [dailySales, setDailySales] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchBranches = async () => {
+    const response = await axios.get(`${url}/api/branch/list`);
+    if (response.data.success) {
+      setBranches(response.data.data);
+    }
+  };
+
+  const fetchDashboardData = async (branchId = "") => {
+    setLoading(true);
+    try {
+      const queryParam = branchId ? `?branchId=${branchId}` : "";
+      
+      const [statsRes, dailyRes] = await Promise.all([
+        axios.get(`${url}/api/analytics/dashboard${queryParam}`, {
+          headers: { token },
+        }),
+        axios.get(`${url}/api/analytics/daily${queryParam}`, {
+          headers: { token },
+        }),
+      ]);
+
+      if (statsRes.data.success) {
+        setStats(statsRes.data.data);
+      }
+      if (dailyRes.data.success) {
+        setDailySales(dailyRes.data.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error fetching analytics");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!admin && !token) {
+      toast.error("Please Login First");
+      navigate("/");
+      return;
+    }
+    fetchBranches();
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchDashboardData(selectedBranch);
+    }
+  }, [selectedBranch]);
+
+  const avgOrderValue = stats?.totalOrders > 0 
+    ? (stats.totalSales / stats.totalOrders).toFixed(2) 
+    : 0;
+
+  return (
+    <div className="dashboard add">
+      <div className="dashboard-header">
+        <h2>📊 Analytics Dashboard</h2>
+        {branches.length > 0 && (
+          <div className="branch-filter">
+            <label>Branch: </label>
+            <select
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+            >
+              <option value="">All Branches</option>
+              {branches.map((branch) => (
+                <option key={branch._id} value={branch._id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="loading">Loading analytics...</div>
+      ) : (
+        <>
+          {/* Stat Cards */}
+          <div className="stat-cards">
+            <div className="stat-card revenue">
+              <div className="stat-icon">💰</div>
+              <div className="stat-info">
+                <h3>${stats?.totalSales || 0}</h3>
+                <p>Total Revenue</p>
+              </div>
+            </div>
+            <div className="stat-card orders">
+              <div className="stat-icon">📦</div>
+              <div className="stat-info">
+                <h3>{stats?.totalOrders || 0}</h3>
+                <p>Total Orders</p>
+              </div>
+            </div>
+            <div className="stat-card avg">
+              <div className="stat-icon">📈</div>
+              <div className="stat-info">
+                <h3>${avgOrderValue}</h3>
+                <p>Avg Order Value</p>
+              </div>
+            </div>
+            <div className="stat-card pending">
+              <div className="stat-icon">⏳</div>
+              <div className="stat-info">
+                <h3>{stats?.pendingOrders || 0}</h3>
+                <p>Pending Orders</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Row */}
+          <div className="charts-row">
+            {/* Daily Sales Chart */}
+            <div className="chart-container">
+              <h3>📅 Daily Sales (Last 7 Days)</h3>
+              {dailySales.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={dailySales}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip />
+                    <Bar dataKey="sales" fill="#ff6b35" name="Sales ($)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="no-data">No sales data available</p>
+              )}
+            </div>
+
+            {/* Orders by Type */}
+            <div className="chart-container small">
+              <h3>📋 Orders by Type</h3>
+              {stats?.ordersByType?.length > 0 ? (
+                <div className="type-breakdown">
+                  {stats.ordersByType.map((item, idx) => (
+                    <div key={idx} className="type-item">
+                      <span className="type-label">
+                        {item.type === "Dine-in" ? "🍽️" : item.type === "Delivery" ? "🚚" : "🛍️"} {item.type}
+                      </span>
+                      <span className="type-count">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-data">No order data</p>
+              )}
+            </div>
+          </div>
+
+          {/* Top Selling Foods */}
+          <div className="top-foods">
+            <h3>🔥 Top Selling Items</h3>
+            {stats?.topFoods?.length > 0 ? (
+              <table className="top-foods-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Item Name</th>
+                    <th>Quantity Sold</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.topFoods.map((food, idx) => (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td>
+                      <td>{food.name}</td>
+                      <td>{food.quantity}</td>
+                      <td>${food.revenue}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="no-data">No sales data yet</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
