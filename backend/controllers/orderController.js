@@ -1,6 +1,7 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import foodModel from "../models/foodModel.js";
+import tableModel from "../models/tableModel.js";
 import Stripe from "stripe";
 import { io } from "../server.js";
 
