@@ -9,7 +9,7 @@ import { io } from "socket.io-client";
 const PlaceOrder = () => {
   const navigate = useNavigate();
 
-  const {
+    const {
     getTotalCartAmount,
     token,
     food_list,
@@ -21,6 +21,7 @@ const PlaceOrder = () => {
     tableName,
     clearDineInContext,
     branches,
+    guestId
   } = useContext(StoreContext);
 
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -84,6 +85,7 @@ const PlaceOrder = () => {
       amount: getTotalCartAmount() + (isOrdersDineIn ? 0 : 15000),
       orderType: isOrdersDineIn ? "Dine-in" : "Delivery",
       paymentMethod: paymentMethod,
+      guestId: guestId,
     };
 
     if (isOrdersDineIn) {
@@ -185,6 +187,28 @@ const PlaceOrder = () => {
     }
   }, [orderMethod, isContextDineIn, selectedBranch, url]);
 
+  // Smart Table Check: Fetch table status if QR scanned
+  const [tableStatus, setTableStatus] = useState(null);
+
+  useEffect(() => {
+    if (isContextDineIn && tableId) {
+      const checkTableStatus = async () => {
+        try {
+          const response = await axios.get(`${url}/api/table/detail/${tableId}`); // Assuming this endpoint exists or similar
+          if (response.data.success) {
+            setTableStatus(response.data.data.status);
+            if (response.data.data.status !== "Available") {
+               toast.warning(`⚠️ Bàn này đang ở trạng thái "${response.data.data.status}". Nếu bạn đi cùng nhóm đã ngồi, hãy tiếp tục.`, { autoClose: 7000 });
+            }
+          }
+        } catch (error) {
+           console.error("Error checking table status", error);
+        }
+      };
+      checkTableStatus();
+    }
+  }, [isContextDineIn, tableId, url]);
+
   return (
     <div className="place-order">
       <div className="place-order-container">
@@ -198,6 +222,7 @@ const PlaceOrder = () => {
         </div>
 
         <form className="place-order-grid" onSubmit={placeOrder}>
+          {/* LEFT COLUMN: Information & Config */}
           <div className="place-order-left">
             {/* Delivery Mode Toggle Card */}
             <div className="place-order-card">
@@ -217,9 +242,12 @@ const PlaceOrder = () => {
               </div>
 
               {isContextDineIn && (
-                <div className="dine-in-badge">
+                <div className={`dine-in-badge ${tableStatus && tableStatus !== "Available" ? "warning-status" : ""}`}>
                   <span className="badge">Đã quét mã QR</span>
-                  <p className="table-info">Bàn: {tableName || tableId}</p>
+                  <p className="table-info">
+                    Bàn: {tableName || tableId} 
+                    {tableStatus && tableStatus !== "Available" && <span className="status-warning"> ({tableStatus})</span>}
+                  </p>
                   <button
                     type="button"
                     className="clear-session"
@@ -235,35 +263,36 @@ const PlaceOrder = () => {
               )}
             </div>
 
-            {/* Delivery Information Card */}
-            {orderMethod === 'delivery' ? (
-              <div className="place-order-card">
-                <h3 className="place-order-card-title">Thông tin giao hàng</h3>
-                <div className="multi-fields">
-                  <input required name='firstName' onChange={onChangeHandler} value={data.firstName} type="text" placeholder='Họ' />
-                  <input required name='lastName' onChange={onChangeHandler} value={data.lastName} type="text" placeholder='Tên' />
-                </div>
-                <input required name='email' onChange={onChangeHandler} value={data.email} type="email" placeholder='Email' />
-                <input required name='street' onChange={onChangeHandler} value={data.street} type="text" placeholder='Địa chỉ (Số nhà, Tên đường)' />
-                <div className="multi-fields">
-                  <input required name='city' onChange={onChangeHandler} value={data.city} type="text" placeholder='Thành phố' />
-                  <input required name='state' onChange={onChangeHandler} value={data.state} type="text" placeholder='Quận/Huyện' />
-                </div>
-                <div className="multi-fields">
-                  <input required name='zipcode' onChange={onChangeHandler} value={data.zipcode} type="text" placeholder='Mã bưu điện' />
-                  <input required name='country' onChange={onChangeHandler} value={data.country} type="text" placeholder='Quốc gia' />
-                </div>
-                <input required name='phone' onChange={onChangeHandler} value={data.phone} type="text" placeholder='Số điện thoại' />
+            {/* Customer Information Card (Dynamic) */}
+            <div className="place-order-card">
+              <h3 className="place-order-card-title">Thông tin khách hàng</h3>
+              <div className="multi-fields">
+                <input required name='firstName' onChange={onChangeHandler} value={data.firstName} type="text" placeholder='Họ' />
+                <input required name='lastName' onChange={onChangeHandler} value={data.lastName} type="text" placeholder='Tên' />
               </div>
-            ) : (
-              <div className="place-order-card">
-                <h3 className="place-order-card-title">Thông tin đặt bàn</h3>
-                <div className="dine-in-info">
-                  <p>Bạn đã chọn chế độ <b>Ăn tại quán</b>.</p>
-                  <p>Vui lòng chọn chi nhánh và xác nhận đơn hàng. Nhân viên sẽ phục vụ món ăn cho bạn.</p>
+              <input required name='phone' onChange={onChangeHandler} value={data.phone} type="text" placeholder='Số điện thoại' />
+              
+              {/* Delivery Only Fields */}
+              {orderMethod === 'delivery' && (
+                <div className="delivery-fields fade-in">
+                  <input required name='email' onChange={onChangeHandler} value={data.email} type="email" placeholder='Email' />
+                  <input required name='street' onChange={onChangeHandler} value={data.street} type="text" placeholder='Địa chỉ (Số nhà, Tên đường)' />
+                  <div className="multi-fields">
+                    <input required name='city' onChange={onChangeHandler} value={data.city} type="text" placeholder='Thành phố' />
+                    <input required name='state' onChange={onChangeHandler} value={data.state} type="text" placeholder='Quận/Huyện' />
+                  </div>
+                  <div className="multi-fields">
+                    <input required name='zipcode' onChange={onChangeHandler} value={data.zipcode} type="text" placeholder='Mã bưu điện' />
+                    <input required name='country' onChange={onChangeHandler} value={data.country} type="text" placeholder='Quốc gia' />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+              {orderMethod === 'dine-in' && (
+                 <p className="dine-in-note">
+                    <span style={{fontSize: '0.9rem', color: '#64748b'}}>* Vui lòng nhập tên để nhân viên phục vụ gọi món.</span>
+                 </p>
+              )}
+            </div>
 
             {/* Branch Selection Card */}
             {(!isContextDineIn || !branchId) && (
@@ -306,22 +335,24 @@ const PlaceOrder = () => {
                       <div key={floor} className="floor-section">
                         <h4 className="floor-title">Tầng {floor}</h4>
                         <div className="table-selection-grid">
-                          {floorTables.map((table) => {
+                          {floorTables
+                            .sort((a, b) => a.tableNumber.localeCompare(b.tableNumber, undefined, {numeric: true}))
+                            .map((table) => {
                             const isSelected = selectedTable === table._id;
                             const isAvailable = table.status === "Available";
                             return (
                               <div
                                 key={table._id}
-                                className={`table-option ${isSelected ? "selected" : ""} ${!isAvailable ? "occupied" : ""}`}
+                                className={`table-option ${isSelected ? "selected" : ""} ${!isAvailable ? "occupied" : "available"}`}
                                 onClick={() => isAvailable && setSelectedTable(table._id)}
                               >
-                                <div className="table-number">{table.tableNumber}</div>
-                                <div className="table-capacity">
-                                  👤 {table.capacity} người
+                                <span className="table-number">{table.tableNumber}</span>
+                                <div className="table-details-row">
+                                    <span className="table-capacity">👤 {table.capacity}</span>
+                                    {/* Only show status text if occupied, otherwise clean number */}
+                                    {!isAvailable && <span className="table-status-pill occupied">Đang dùng</span>}
                                 </div>
-                                <div className="table-status">
-                                  {isAvailable ? "Trống" : "Đang dùng"}
-                                </div>
+                                {isSelected && <div className="selected-indicator">✓</div>}
                               </div>
                             );
                           })}
@@ -335,10 +366,12 @@ const PlaceOrder = () => {
                 {!selectedTable && <p className="error-text">Vui lòng chọn bàn trống</p>}
               </div>
             )}
+          </div>
 
-            {/* Order Items Review Card */}
+          {/* CENTER COLUMN: Selected Items (Moved here) */}
+          <div className="place-order-center">
             <div className="place-order-card">
-              <h3 className="place-order-card-title">Các món đã chọn</h3>
+              <h3 className="place-order-card-title">Món đã chọn</h3>
               <div className="place-order-items">
                 {food_list.map((item, index) => {
                   if (cartItems[item._id] > 0) {
@@ -362,6 +395,7 @@ const PlaceOrder = () => {
             </div>
           </div>
 
+          {/* RIGHT COLUMN: Total & Payment */}
           <div className="place-order-right">
             <div className="cart-total">
               <h2>Tổng đơn hàng</h2>

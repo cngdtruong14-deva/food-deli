@@ -1,9 +1,10 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import tableModel from "../models/tableModel.js";
 import mongoose from "mongoose";
 
-// Get dashboard statistics
-const getDashboardStats = async (req, res) => {
+// Get live status (Active Tables & Kitchen Backlog)
+const getLiveStatus = async (req, res) => {
   try {
     const userData = await userModel.findById(req.body.userId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
@@ -12,164 +13,143 @@ const getDashboardStats = async (req, res) => {
 
     const { branchId } = req.query;
     
-    // Build match filter
-    const matchFilter = {
-      status: { $in: ["Paid", "Served", "Confirmed", "Preparing"] }
-    };
-    
+    // 1. Active Tables
+    const activeTablesQuery = { status: "Occupied" };
     if (branchId) {
-      matchFilter.branchId = new mongoose.Types.ObjectId(branchId);
+      activeTablesQuery.branchId = new mongoose.Types.ObjectId(branchId);
+    }
+    const activeTables = await tableModel.countDocuments(activeTablesQuery);
+
+    // 2. Kitchen Backlog
+    const backlogQuery = { status: { $in: ["Confirmed", "Preparing"] } };
+    if (branchId) {
+        backlogQuery.branchId = new mongoose.Types.ObjectId(branchId);
+    }
+    const kitchenBacklog = await orderModel.countDocuments(backlogQuery);
+
+    res.json({
+      success: true,
+      data: {
+        activeTables,
+        kitchenBacklog
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error fetching live status" });
+  }
+};
+
+// Get Consolidated Dashboard Data
+const getDashboardData = async (req, res) => {
+  try {
+    const userData = await userModel.findById(req.body.userId);
+    if (!userData || !["admin", "manager"].includes(userData.role)) {
+      return res.json({ success: false, message: "Unauthorized" });
     }
 
-    // Total Sales (sum of amount for completed orders)
-    const salesResult = await orderModel.aggregate([
-      { $match: matchFilter },
-      { $group: { _id: null, totalSales: { $sum: "$amount" } } }
-    ]);
-    const totalSales = salesResult[0]?.totalSales || 0;
+    const { branchId } = req.query;
 
-    // Total Orders count
-    const totalOrders = await orderModel.countDocuments(
-      branchId ? { branchId: new mongoose.Types.ObjectId(branchId) } : {}
-    );
+    // --- PIPELINES ---
 
-    // Pending Orders count
-    const pendingOrders = await orderModel.countDocuments({
-      status: { $in: ["Pending", "Confirmed", "Preparing"] },
-      ...(branchId && { branchId: new mongoose.Types.ObjectId(branchId) })
-    });
+    // 1. Revenue by Day (Last 7 Days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Top Selling Foods (aggregate items, group by name, sum quantity)
-    const topFoods = await orderModel.aggregate([
-      { $match: matchFilter },
+    const revenueMatch = {
+      status: { $in: ["Paid", "Served"] },
+      date: { $gte: sevenDaysAgo }
+    };
+    if (branchId) revenueMatch.branchId = new mongoose.Types.ObjectId(branchId);
+
+    const revenuePipeline = [
+      { $match: revenueMatch },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          dailyRevenue: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ];
+
+    // 2. Peak Hours Heatmap
+    const peakMatch = { status: { $ne: "Cancelled" } };
+    if (branchId) peakMatch.branchId = new mongoose.Types.ObjectId(branchId);
+
+    const peakHoursPipeline = [
+      { $match: peakMatch },
+      {
+        $project: {
+          dayOfWeek: { $isoDayOfWeek: "$date" }, // 1 (Mon) - 7 (Sun)
+          hour: { $hour: "$date" }             // 0 - 23
+        }
+      },
+      {
+        $group: {
+          _id: { day: "$dayOfWeek", hour: "$hour" },
+          orderCount: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.day": 1, "_id.hour": 1 } }
+    ];
+
+    // 3. Lost Sales Analysis (Cancellation)
+    const cancelMatch = { status: "Cancelled" };
+    if (branchId) cancelMatch.branchId = new mongoose.Types.ObjectId(branchId);
+
+    const lostSalesPipeline = [
+      { $match: cancelMatch },
+      {
+        $group: {
+          _id: "$cancellationReason",
+          count: { $sum: 1 },
+          lostRevenue: { $sum: "$amount" }
+        }
+      }
+    ];
+    
+    // 4. Top Selling Products
+    const topProdMatch = { status: { $ne: "Cancelled" } };
+    if (branchId) topProdMatch.branchId = new mongoose.Types.ObjectId(branchId);
+    
+    const topProductsPipeline = [
+      { $match: topProdMatch },
       { $unwind: "$items" },
       {
         $group: {
           _id: "$items.name",
-          totalQuantity: { $sum: "$items.quantity" },
-          totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+          totalQty: { $sum: "$items.quantity" },
+          totalRev: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
         }
       },
-      { $sort: { totalQuantity: -1 } },
-      { $limit: 5 },
-      {
-        $project: {
-          name: "$_id",
-          quantity: "$totalQuantity",
-          revenue: "$totalRevenue",
-          _id: 0
-        }
-      }
-    ]);
+      { $sort: { totalQty: -1 } },
+      { $limit: 5 }
+    ];
 
-    // Order breakdown by type
-    const ordersByType = await orderModel.aggregate([
-      { $match: branchId ? { branchId: new mongoose.Types.ObjectId(branchId) } : {} },
-      { $group: { _id: "$orderType", count: { $sum: 1 } } },
-      { $project: { type: "$_id", count: 1, _id: 0 } }
+    // Execution
+    const [revenueData, peakData, lostSalesData, topProducts] = await Promise.all([
+      orderModel.aggregate(revenuePipeline),
+      orderModel.aggregate(peakHoursPipeline),
+      orderModel.aggregate(lostSalesPipeline),
+      orderModel.aggregate(topProductsPipeline)
     ]);
 
     res.json({
       success: true,
       data: {
-        totalSales,
-        totalOrders,
-        pendingOrders,
-        topFoods,
-        ordersByType
+        revenue: revenueData,
+        peakHours: peakData,
+        lostSales: lostSalesData,
+        topProducts: topProducts
       }
     });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Error fetching analytics" });
+    res.json({ success: false, message: "Error fetching dashboard data" });
   }
 };
 
-// Get daily sales for the last 7 days
-const getDailySales = async (req, res) => {
-  try {
-    const userData = await userModel.findById(req.body.userId);
-    if (!userData || !["admin", "manager"].includes(userData.role)) {
-      return res.json({ success: false, message: "Unauthorized" });
-    }
-
-    const { branchId } = req.query;
-    
-    // Calculate date 7 days ago
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-
-    // Build match filter
-    const matchFilter = {
-      date: { $gte: sevenDaysAgo },
-      status: { $in: ["Paid", "Served", "Confirmed", "Preparing"] }
-    };
-    
-    if (branchId) {
-      matchFilter.branchId = new mongoose.Types.ObjectId(branchId);
-    }
-
-    const dailySales = await orderModel.aggregate([
-      { $match: matchFilter },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$date" }
-          },
-          totalSales: { $sum: "$amount" },
-          orderCount: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } },
-      {
-        $project: {
-          date: "$_id",
-          sales: "$totalSales",
-          orders: "$orderCount",
-          _id: 0
-        }
-      }
-    ]);
-
-    res.json({
-      success: true,
-      data: dailySales
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error fetching daily sales" });
-  }
-};
-
-// Get orders by status breakdown
-const getOrdersByStatus = async (req, res) => {
-  try {
-    const userData = await userModel.findById(req.body.userId);
-    if (!userData || !["admin", "manager"].includes(userData.role)) {
-      return res.json({ success: false, message: "Unauthorized" });
-    }
-
-    const { branchId } = req.query;
-    
-    const matchFilter = branchId 
-      ? { branchId: new mongoose.Types.ObjectId(branchId) } 
-      : {};
-
-    const statusBreakdown = await orderModel.aggregate([
-      { $match: matchFilter },
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-      { $project: { status: "$_id", count: 1, _id: 0 } }
-    ]);
-
-    res.json({
-      success: true,
-      data: statusBreakdown
-    });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error fetching status breakdown" });
-  }
-};
-
-export { getDashboardStats, getDailySales, getOrdersByStatus };
+export { getLiveStatus, getDashboardData };

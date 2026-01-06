@@ -8,7 +8,7 @@ import PlaceOrder from "./pages/PlaceOrder/PlaceOrder";
 import Branches from "./pages/Branches/Branches";
 import Footer from "./components/Footer/Footer";
 import LoginPopup from "./components/LoginPopup/LoginPopup";
-import CartFAB from "./components/CartFAB/CartFAB";
+import SmartFab from "./components/SmartFab/SmartFab";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Verify from "./pages/Verify/Verify";
@@ -38,7 +38,7 @@ const App = () => {
   return (
     <>
       {showLogin ? <LoginPopup setShowLogin={setShowLogin} /> : <></>}
-      <div className="app">
+      <div className="app page-fade-in">
         <ScrollToTop />
         <ToastContainer />
         <Navbar setShowLogin={setShowLogin} />
@@ -52,7 +52,7 @@ const App = () => {
           <Route path="/branches" element={<Branches />} />
         </Routes>
       </div>
-      <CartFAB />
+      <SmartFab />
       <Footer />
     </>
   );

@@ -8,7 +8,9 @@ const foodSchema = new mongoose.Schema({
   category: { type: mongoose.Schema.Types.ObjectId, ref: "category", required: true },
   isAvailable: { type: Boolean, default: true },
   stock: { type: Number, default: 100 },
-  trackStock: { type: Boolean, default: true }
+  trackStock: { type: Boolean, default: true },
+  isDeleted: { type: Boolean, default: false },
+  costPrice: { type: Number, default: 0 }
 });
 
 const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);

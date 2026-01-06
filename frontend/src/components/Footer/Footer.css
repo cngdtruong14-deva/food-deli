@@ -6,10 +6,11 @@
   align-items: center;
   gap: 2.5rem;
   padding: 4rem 2rem;
-  padding-top: 6rem;
-  margin-top: 6rem;
+  padding-top: 4rem;
+  margin-top: 0; /* No margin needed, content has padding-bottom */
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .footer::before {
@@ -142,8 +143,8 @@
 @media (max-width: 1050px) {
   .footer {
     padding: 3rem 1.5rem;
-    padding-top: 5rem;
-    margin-top: 4rem;
+    padding-top: 3rem;
+    margin-top: 3rem;
   }
   
   .footer-content {
@@ -154,8 +155,8 @@
 @media (max-width: 750px) {
   .footer {
     padding: 2.5rem 1rem;
-    padding-top: 4rem;
-    margin-top: 3rem;
+    padding-top: 2.5rem;
+    margin-top: 2.5rem;
     gap: 2rem;
   }
   
@@ -173,8 +174,18 @@
     text-align: center;
   }
   
+  .footer-logo {
+    font-size: 2rem;
+  }
+  
   .footer-content-left p {
     max-width: 100%;
+    font-size: 0.9rem;
+  }
+  
+  .footer-content-center h2,
+  .footer-content-right h2 {
+    font-size: 1.25rem;
   }
   
   .footer-content-center ul,
@@ -182,13 +193,63 @@
     align-items: center;
   }
   
+  .footer-content-center li,
+  .footer-content-right li {
+    font-size: 0.875rem;
+    min-height: 44px; /* Touch target */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
   .footer-content-center li:hover,
   .footer-content-right li:hover {
     transform: translateY(-2px);
   }
   
+  .footer-social-icons {
+    justify-content: center;
+  }
+  
+  .footer-social-icons img {
+    width: 40px;
+    height: 40px;
+  }
+  
   .footer-copyright {
     text-align: center;
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 2rem 0.75rem;
+    padding-top: 2rem;
+    margin-top: 2rem;
+    gap: 1.5rem;
+  }
+  
+  .footer-logo {
+    font-size: 1.75rem;
+  }
+  
+  .footer-content {
+    gap: 2rem;
+  }
+  
+  .footer-content-center h2,
+  .footer-content-right h2 {
+    font-size: 1.125rem;
+  }
+  
+  .footer-content-center li,
+  .footer-content-right li {
+    font-size: 0.8125rem;
+  }
+  
+  .footer-social-icons img {
+    width: 36px;
+    height: 36px;
   }
 }

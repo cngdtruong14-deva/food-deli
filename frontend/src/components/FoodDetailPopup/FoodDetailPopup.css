@@ -3,11 +3,14 @@
     z-index: 2000;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(15, 23, 42, 0.85);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: rgba(15, 23, 42, 0.6); /* Lighter backdrop */
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px); /* Stronger blur */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,111 +19,294 @@
 }
 
 .food-detail-popup-container {
-    background: var(--color-bg-secondary);
+    background: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     width: 100%;
     max-width: 600px;
     padding: 2.5rem;
     border-radius: 24px;
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* Deep shadow */
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     position: relative;
     max-height: 90vh;
+    max-height: 90dvh;
     overflow-y: auto;
-    border: 1px solid var(--color-border);
-    animation: scaleIn 0.3s ease-out;
+    overflow-x: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Glass border */
+    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); /* Spring-like animation */
+    margin: 0 auto;
 }
 
+/* Rest of the CSS remains similar, just refined interactions */
 .food-detail-popup-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--color-border);
+    border-bottom: 2px solid rgba(0,0,0,0.05);
     padding-bottom: 1.25rem;
     margin-bottom: 0.5rem;
+    position: relative;
 }
 
 .food-detail-popup-title h2 {
     font-family: var(--font-heading);
     font-size: clamp(1.5rem, 2.5vw, 2rem);
     font-weight: 700;
-    color: var(--color-text);
+    color: #1a1a1a;
     margin: 0;
     letter-spacing: -0.02em;
+    text-align: center;
+    flex: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 100px);
 }
 
-.food-detail-popup-title img {
+.food-detail-close-btn {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(0,0,0,0.05);
     cursor: pointer;
-    width: 32px;
-    height: 32px;
-    transition: all var(--transition-base);
-    padding: 6px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    opacity: 0.7;
+    transition: all 0.2s ease;
+    z-index: 10;
 }
 
-.food-detail-popup-title img:hover {
-    transform: scale(1.1) rotate(90deg);
-    opacity: 1;
-    background: var(--color-accent-light);
+.food-detail-close-btn:hover {
+    background: #ff6b00;
+    color: white;
+    transform: rotate(90deg);
+}
+.food-detail-close-btn:hover img {
+    filter: brightness(0) invert(1);
 }
 
-.food-detail-content {
+.food-detail-info {
+    text-align: left;
+    background: #f9fafb; /* Gray-50 */
+    padding: 1.5rem; /* p-6 */
+    border-radius: 16px; /* rounded-xl (larger) */
+    border: 1px solid #f3f4f6; /* gray-100 */
+}
+
+.food-detail-info-header {
+    font-size: 0.75rem; /* Small */
+    text-transform: uppercase;
+    color: #9ca3af; /* gray-400 */
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
+.food-detail-desc-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.5rem; /* Space between lines */
 }
 
-.food-detail-image {
-    width: 100%;
-    height: 320px;
-    object-fit: cover;
-    border-radius: 16px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--color-border);
-}
-
-.food-detail-desc {
-    color: var(--color-text-muted);
+.desc-text {
+    color: #4b5563; /* gray-600 */
     font-size: 1rem;
-    line-height: 1.8;
-    text-align: left;
-    white-space: pre-line;
-    font-family: var(--font-body);
+    line-height: 1.625; /* leading-relaxed */
+    margin: 0;
+    white-space: pre-wrap; /* Respect wrapping */
+}
+
+.desc-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: #374151; /* gray-700 */
+    line-height: 1.5;
+    background: #fff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #f3f4f6;
+}
+
+.desc-bullet {
+    width: 6px;
+    height: 6px;
+    background-color: #f1bf4d; /* Theme Gold */
+    border-radius: 50%;
+    margin-top: 9px; /* Align with text */
+    flex-shrink: 0;
 }
 
 .food-detail-price {
-    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
-    font-weight: 700;
-    color: var(--color-accent);
-    text-align: right;
-    font-family: var(--font-body);
-    letter-spacing: -0.01em;
-    padding-top: 1rem;
-    border-top: 2px solid var(--color-border);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1a4d2e;
+    margin: 1rem 0;
+    text-align: center;
 }
 
+/* Quantity Selector Styles */
+.food-detail-quantity-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.food-detail-add-btn {
+    background: linear-gradient(135deg, #1a4d2e 0%, #0F5132 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 12px rgba(26, 77, 46, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.food-detail-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 77, 46, 0.4);
+    background: linear-gradient(135deg, #0F5132 0%, #1a4d2e 100%);
+}
+
+.food-detail-add-btn:active {
+    transform: translateY(0);
+}
+
+.food-detail-quantity-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+/* Quantity Button Styles (Shared with FoodItem) */
+.quantity-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-btn-minus {
+    background: #FFE5E5; /* Light pink */
+    color: #EF4444; /* Red */
+}
+
+.quantity-btn-minus:hover {
+    background: #FFCCCC;
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+}
+
+.quantity-btn-minus:disabled {
+    background: #F3F4F6;
+    color: #9CA3AF;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.quantity-btn-plus {
+    background: #D1FAE5; /* Light green */
+    color: #10B981; /* Green */
+}
+
+.quantity-btn-plus:hover {
+    background: #A7F3D0;
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+.quantity-btn-plus:disabled {
+    background: #F3F4F6;
+    color: #9CA3AF;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.quantity-value {
+    min-width: 56px;
+    text-align: center;
+    font-weight: 800;
+    color: #000000;
+    font-size: 1.75rem;
+    font-family: var(--font-body);
+    line-height: 1;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.food-detail-out-of-stock {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 12px;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.food-detail-out-of-stock p {
+    color: #EF4444;
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Media Queries (Keep existing logic but apply transparency) */
 @media (max-width: 600px) {
-    .food-detail-popup {
-        padding: 0.5rem;
-    }
-    
     .food-detail-popup-container {
-        width: 95%;
-        padding: 1.5rem;
-        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.95); /* Less transparent on mobile for readibility */
+        border-radius: 24px 24px 0 0;
+        margin-top: auto;
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
     
-    .food-detail-image {
-        height: 240px;
+    .quantity-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
     }
     
-    .food-detail-popup-title {
-        padding-bottom: 1rem;
+    .quantity-value {
+        font-size: 1.5rem;
+        min-width: 48px;
     }
     
-    .food-detail-content {
+    .food-detail-quantity-controls {
         gap: 1.25rem;
+    }
+    
+    .food-detail-add-btn {
+        padding: 0.875rem 2rem;
+        font-size: 0.9375rem;
     }
 }

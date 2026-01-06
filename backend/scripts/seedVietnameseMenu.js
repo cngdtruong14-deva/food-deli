@@ -34,18 +34,23 @@ const CATEGORY_MAPPING = {
   "cat-004": "Tráng Miệng"         // Desserts
 };
 
-// New refined categories based on menu analysis
+// 13 Refined Categories based on User Request
 const REFINED_CATEGORIES = [
-  { id: "cat-001", name: "Khai Vị & Gỏi", description: "Các món khai vị, gỏi, salad", icon: "🥗" },
   { id: "cat-combo", name: "Combo", description: "Các combo tiết kiệm", icon: "🎁" },
-  { id: "cat-hai-san", name: "Hải Sản", description: "Các món hải sản", icon: "🦐" },
-  { id: "cat-thit", name: "Thịt & Lợn Mán", description: "Các món thịt, lợn mán, trâu bò", icon: "🥩" },
-  { id: "cat-ga", name: "Gà & Ếch", description: "Các món gà, ếch", icon: "🍗" },
-  { id: "cat-ca", name: "Các Món Cá", description: "Các món cá", icon: "🐟" },
-  { id: "cat-lau", name: "Lẩu", description: "Các món lẩu", icon: "🍲" },
-  { id: "cat-rau", name: "Rau & Đồ Xào", description: "Các món rau, đồ xào", icon: "🥬" },
-  { id: "cat-nuong", name: "Đồ Nướng", description: "Các món nướng", icon: "🔥" },
-  { id: "cat-003", name: "Đồ Uống", description: "Bia, nước ngọt, nước ép", icon: "🍺" },
+  { id: "cat-mon-moi", name: "Món Mới", description: "Các món mới cập nhật", icon: "🆕" },
+  { id: "cat-mon-nhau", name: "Món Nhậu", description: "Món nhậu lai rai", icon: "🍻" },
+  { id: "cat-de", name: "Dê Tươi", description: "Các món dê tươi", icon: "🐐" },
+  { id: "cat-nuong", name: "Đồ Nướng", description: "Các món nướng than hoa", icon: "🔥" },
+  { id: "cat-thiet-ban", name: "Thiết Bản", description: "Các món nướng thiết bản", icon: "🍳" },
+  { id: "cat-rau", name: "Rau Xanh", description: "Rau củ quả tươi", icon: "🥬" },
+  { id: "cat-lau", name: "Lẩu", description: "Lẩu các loại", icon: "🍲" },
+  { id: "cat-hai-san", name: "Hải Sản", description: "Tôm, cua, ghẹ, ốc...", icon: "🦐" },
+  { id: "cat-ca", name: "Cá Các Món", description: "Các món cá tươi", icon: "🐟" },
+  { id: "cat-an-choi", name: "Món Ăn Chơi", description: "Khoai tây, ngô chiên...", icon: "🍟" },
+  { id: "cat-salad", name: "Salad - Nộm", description: "Salad và nộm chua ngọt", icon: "🥗" },
+  { id: "cat-com", name: "Cơm", description: "Cơm rang, cơm trắng", icon: "🍚" },
+  { id: "cat-thit", name: "Món Khác", description: "Các món khác", icon: "🍖" }, // Fallback
+  { id: "cat-do-uong", name: "Đồ Uống", description: "Bia, nước ngọt", icon: "🍺" },
 ];
 
 // Load descriptions if available
@@ -110,40 +115,64 @@ function categorizeProduct(product) {
   
   // Combo
   if (name.includes("combo")) return "cat-combo";
-  // ... rest of functionality
-  
-  // Drinks
-  if (name.includes("bia") || name.includes("nước") || name.includes("trà") || 
+
+  // Drinks (Priority Check)
+  if (name.includes("bia") || name.includes("nước") || name.includes("trà ") || name.includes("chè ") || 
       name.includes("rượu") || name.includes("coca") || name.includes("pepsi") ||
-      product.category_id === "cat-003") return "cat-003";
+      product.category_id === "cat-003") return "cat-do-uong";
+
+  // De Tuoi
+  if (name.includes("dê ") || name.includes("tái chanh")) return "cat-de";
   
-  // Hotpot
+  // Ca Cac Mon
+  if (name.includes("cá ") || name.includes("cá chép") || name.includes("cá lăng")) return "cat-ca";
+  
+  // Lau
   if (name.includes("lẩu")) return "cat-lau";
   
-  // Fish
-  if (name.includes("cá ")) return "cat-ca";
-  
-  // Seafood
+  // Hai San
   if (name.includes("tôm") || name.includes("mực") || name.includes("ốc") || 
-      name.includes("bạch tuộc") || name.includes("hải sản") || name.includes("sứa")) return "cat-hai-san";
+      name.includes("bạch tuộc") || name.includes("sứa") || name.includes("hàu")) return "cat-hai-san";
   
-  // Chicken & Frog
-  if (name.includes("gà") || name.includes("ếch") || name.includes("cánh")) return "cat-ga";
+  // Salad - Nom
+  if (name.includes("gỏi") || name.includes("nộm") || name.includes("salad")) return "cat-salad";
   
-  // Grilled
-  if (name.includes("nướng")) return "cat-nuong";
-  
-  // Vegetables
+  // Rau Xanh
   if (name.includes("rau") || name.includes("cải") || name.includes("muống") || 
-      name.includes("đậu") || name.includes("ngọn") || name.includes("măng") ||
-      name.includes("khổ qua") || name.includes("ngô")) return "cat-rau";
+      name.includes("xu su") || name.includes("lặc lè") || name.includes("măng")) return "cat-rau";
+
+  // Thiet Ban (Heuristic: "sốt", "nóng", "chảo", "cháy tỏi", "tứ xuyên" combined with meat or specifically mentioned)
+  if (
+      // Explicit keyword
+      name.includes("thiết bản") || 
+      name.includes("bò sốt") || 
+      name.includes("bò lúc lắc") ||
+      
+      // Meat + Style heuristics (excluding Hotpot/Salad which are caught earlier or later priority?)
+      (
+        (name.includes("bò") || name.includes("bê") || name.includes("dải") || name.includes("sụn")) &&
+        (name.includes("sốt") || name.includes("cháy tỏi") || name.includes("tứ xuyên") || name.includes("tiêu"))
+      ) &&
+      !name.includes("lẩu") && !name.includes("nộm") && !name.includes("gỏi")
+  ) return "cat-thiet-ban";
+
+  // Do Nuong
+  if (name.includes("nướng")) return "cat-nuong";
+
+  // Mon An Choi
+  if (name.includes("khoai tây") || name.includes("ngô chiên") || name.includes("khoai lệ phố") || 
+      name.includes("xúc xích") || name.includes("nem chua")) return "cat-an-choi";
+      
+  // Com / Mien / Chao
+  if (name.includes("cơm") || name.includes("cháo") || name.includes("xôi")) return "cat-com";
   
-  // Appetizers/Salads
-  if (name.includes("gỏi") || name.includes("nộm") || name.includes("salad") || 
-      name.includes("khoai") || name.includes("chả") || name.includes("nem") ||
-      product.category_id === "cat-001") return "cat-001";
+  // Mon Nhau (General meat dishes that didn't fit elsewhere)
+  if (name.includes("lợn") || name.includes("heo") || name.includes("trâu") || 
+      name.includes("gà") || name.includes("ếch") || name.includes("dồi")) return "cat-mon-nhau";
+
+  // Mon Moi check (Logic based on "new" tag if existed, for now fallback to Mon Nhau or Khac)
   
-  // Default to meat
+  // Fallback
   return "cat-thit";
 }
 

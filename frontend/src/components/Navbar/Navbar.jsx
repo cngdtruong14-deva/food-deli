@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("home");
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { getTotalCartAmount, token, setToken, searchQuery, setSearchQuery } = useContext(StoreContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,46 +34,80 @@ const Navbar = ({ setShowLogin }) => {
   };
 
   return (
-    <div className="navbar">
-      <Link to='/'><div className="logo">Freedom.</div></Link>
-      <ul className="navbar-menu">
-        <Link
-          to="/"
-          onClick={() => setMenu("home")}
-          className={menu === "home" ? "active" : ""}
-        >
-          Trang Chủ
-        </Link>
-        <a
-          href="#explore-menu"
-          onClick={() => setMenu("menu")}
-          className={menu === "menu" ? "active" : ""}
-        >
-          Thực Đơn
-        </a>
-        <Link
-          to="/branches"
-          onClick={() => setMenu("branches")}
-          className={menu === "branches" ? "active" : ""}
-        >
-          Chi Nhánh
-        </Link>
-        <a
-          href="#app-download"
-          onClick={() => setMenu("mobile-app")}
-          className={menu === "mobile-app" ? "active" : ""}
-        >
-          Ứng Dụng
-        </a>
-        <a
-          href="#footer"
-          onClick={() => setMenu("contact-us")}
-          className={menu === "contact-us" ? "active" : ""}
-        >
-          Liên Hệ
-        </a>
-      </ul>
-      <div className="navbar-right">
+    <>
+      <div className="navbar">
+        <div className="navbar-left">
+          <Link to='/' className="logo-container">
+            <div className="logo-text">Freedom.</div>
+          </Link>
+          <div className="navbar-hotline">
+            <div className="hotline-label">HOTLINE</div>
+            <div className="hotline-number">*1986</div>
+          </div>
+        </div>
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label="Toggle menu"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {mobileMenuOpen ? (
+            <>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </>
+          ) : (
+            <>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </>
+          )}
+        </svg>
+      </button>
+        <ul className={`navbar-menu ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <Link
+            to="/"
+            onClick={() => {
+              setMenu("home");
+              setMobileMenuOpen(false);
+            }}
+            className={menu === "home" ? "active" : ""}
+          >
+            THỰC ĐƠN
+          </Link>
+          <Link
+            to="/branches"
+            onClick={() => {
+              setMenu("branches");
+              setMobileMenuOpen(false);
+            }}
+            className={menu === "branches" ? "active" : ""}
+          >
+            CƠ SỞ
+          </Link>
+          <a
+            href="#app-download"
+            onClick={() => {
+              setMenu("mobile-app");
+              setMobileMenuOpen(false);
+            }}
+            className={menu === "mobile-app" ? "active" : ""}
+          >
+            ƯU ĐÃI
+          </a>
+          <a
+            href="#footer"
+            onClick={() => {
+              setMenu("contact-us");
+              setMobileMenuOpen(false);
+            }}
+            className={menu === "contact-us" ? "active" : ""}
+          >
+            LIÊN HỆ
+          </a>
+        </ul>
+        <div className="navbar-right">
         {showSearchInput ? (
           <div className="navbar-search-input-container">
             <input 
@@ -95,7 +130,7 @@ const Navbar = ({ setShowLogin }) => {
           <div className={getTotalCartAmount() === 0 ? "" : "dot"}></div>
         </div>
         {!token ? (
-          <button onClick={() => setShowLogin(true)}>Đăng Nhập</button>
+          <button className="navbar-book-btn" onClick={() => setShowLogin(true)}>ĐẶT BÀN</button>
         ) : (
           <div className="navbar-profile">
             <img src={assets.profile_icon} alt="" />
@@ -112,8 +147,9 @@ const Navbar = ({ setShowLogin }) => {
             </ul>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

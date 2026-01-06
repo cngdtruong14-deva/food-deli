@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import "./Table.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { StoreContext } from "../../context/StoreContext";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 
 const TableList = ({ url }) => {
   const navigate = useNavigate();
@@ -11,14 +12,18 @@ const TableList = ({ url }) => {
   const [tables, setTables] = useState([]);
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all"); // "all", "Available", "Occupied", "Reserved"
+  const [modal, setModal] = useState({ isOpen: false, type: null, id: null });
 
   const fetchBranches = async () => {
     const response = await axios.get(`${url}/api/branch/list`);
     if (response.data.success) {
       setBranches(response.data.data);
-      if (response.data.data.length > 0) {
+      if (response.data.data.length > 0 && !selectedBranch) {
         setSelectedBranch(response.data.data[0]._id);
       }
+    } else {
+      toast.error("Error fetching branches");
     }
   };
 
@@ -38,18 +43,51 @@ const TableList = ({ url }) => {
       { id: tableId },
       { headers: { token } }
     );
-    await fetchTables(selectedBranch);
     if (response.data.success) {
-      toast.success(response.data.message);
+      toast.success("Bàn đã được xóa");
+      fetchTables(selectedBranch);
     } else {
-      toast.error(response.data.message);
+      toast.error("Lỗi xóa bàn");
     }
   };
 
-  const copyQRLink = (table) => {
-    const link = `http://localhost:5173/menu?tableId=${table._id}&branchId=${table.branchId._id || table.branchId}`;
-    navigator.clipboard.writeText(link);
-    toast.success("QR Link copied to clipboard!");
+  const handleStatusChange = async (tableId, newStatus) => {
+    try {
+      const response = await axios.put(
+        `${url}/api/table/status/${tableId}`,
+        { status: newStatus },
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        toast.success("Trạng thái đã được cập nhật");
+        fetchTables(selectedBranch);
+      } else {
+        toast.error("Lỗi cập nhật trạng thái");
+      }
+    } catch (error) {
+      toast.error("Lỗi server");
+    }
+  };
+
+  const handleConfirmDelete = () => {
+      if(modal.id) {
+          removeTable(modal.id);
+      }
+      closeModal();
+  };
+
+  const openDeleteModal = (id) => {
+      setModal({
+          isOpen: true,
+          type: 'delete',
+          id: id,
+          title: "Xác nhận xóa",
+          message: "Bạn có chắc chắn muốn xóa bàn này không? Hành động này không thể hoàn tác."
+      });
+  };
+
+  const closeModal = () => {
+      setModal({ isOpen: false, type: null, id: null });
   };
 
   useEffect(() => {
@@ -66,6 +104,37 @@ const TableList = ({ url }) => {
     }
   }, [selectedBranch]);
 
+  const filteredTables = useMemo(() => {
+    if (filterStatus === "all") return tables;
+    return tables.filter((table) => table.status === filterStatus);
+  }, [tables, filterStatus]);
+
+  // Calculate occupancy rate
+  const calculateOccupancyRate = () => {
+    if (tables.length === 0) return 0;
+    const occupiedTables = tables.filter(
+      (table) => table.status !== "Available"
+    ).length;
+    return Math.round((occupiedTables / tables.length) * 100);
+  };
+
+  const occupancyRate = calculateOccupancyRate();
+
+  const getOccupancyClass = (rate) => {
+    if (rate <= 30) return "occupancy-low";
+    if (rate <= 70) return "occupancy-medium";
+    if (rate <= 90) return "occupancy-high";
+    return "occupancy-very-high";
+  };
+
+  const copyQRLink = (table) => {
+    // Generate QR Link (Assuming frontend URL)
+    // Here we construct link to a menu page or ordering page.
+    const link = `http://localhost:5173/menu?tableId=${table._id}&branchId=${table.branchId._id || table.branchId}`;
+    navigator.clipboard.writeText(link);
+    toast.success("QR Link copied to clipboard!");
+  };
+
   return (
     <div className="list add flex-col">
       <div className="list-header">
@@ -75,18 +144,65 @@ const TableList = ({ url }) => {
         </button>
       </div>
 
-      <div className="branch-filter">
-        <label>Chọn Chi Nhánh: </label>
-        <select
-          value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
-        >
-          {branches.map((branch) => (
-            <option key={branch._id} value={branch._id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
+      <div className="branch-filter-wrapper">
+        <div className="branch-filter">
+          <label>Chọn Chi Nhánh: </label>
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+          >
+            {branches.map((branch) => (
+              <option key={branch._id} value={branch._id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="table-status-filter">
+          <label>Trạng Thái:</label>
+          <div className="status-filter-buttons">
+            <button
+              className={`status-filter-btn ${filterStatus === "all" ? "active" : ""}`}
+              onClick={() => setFilterStatus("all")}
+            >
+              Tất cả
+            </button>
+            <button
+              className={`status-filter-btn ${filterStatus === "Available" ? "active" : ""}`}
+              onClick={() => setFilterStatus("Available")}
+            >
+              Trống ({tables.filter(t => t.status === "Available").length})
+            </button>
+            <button
+              className={`status-filter-btn ${filterStatus === "Occupied" ? "active" : ""}`}
+              onClick={() => setFilterStatus("Occupied")}
+            >
+              Đang sử dụng ({tables.filter(t => t.status === "Occupied").length})
+            </button>
+            <button
+              className={`status-filter-btn ${filterStatus === "Reserved" ? "active" : ""}`}
+              onClick={() => setFilterStatus("Reserved")}
+            >
+              Đã đặt ({tables.filter(t => t.status === "Reserved").length})
+            </button>
+          </div>
+        </div>
+
+        {tables.length > 0 && (
+          <div className="occupancy-indicator">
+            <div className="occupancy-label">
+              <span>Tỉ lệ lấp đầy:</span>
+              <span className="occupancy-percentage">{occupancyRate}%</span>
+            </div>
+            <div className="occupancy-progress-bar">
+              <div
+                className={`occupancy-progress-fill ${getOccupancyClass(occupancyRate)}`}
+                style={{ width: `${occupancyRate}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="list-table">
@@ -97,22 +213,28 @@ const TableList = ({ url }) => {
           <b>QR Code</b>
           <b>Hành Động</b>
         </div>
-        {tables.map((item, index) => (
+        {filteredTables.map((item, index) => (
           <div key={index} className="list-table-format table-format">
             <p>{item.tableNumber}</p>
             <p>{item.capacity} người</p>
-            <p className={`status-${item.status.toLowerCase()}`}>
-              {item.status === "Available" ? "Trống" : "Đang sử dụng"}
-            </p>
+            <select
+              value={item.status}
+              onChange={(e) => handleStatusChange(item._id, e.target.value)}
+              className={`status-select status-${item.status.toLowerCase()}`}
+            >
+              <option value="Available">Trống</option>
+              <option value="Occupied">Đang sử dụng</option>
+              <option value="Reserved">Đã đặt</option>
+            </select>
             <button className="qr-btn" onClick={() => copyQRLink(item)}>
               Sao Chép Link QR
             </button>
-            <p onClick={() => removeTable(item._id)} className="cursor remove-btn">
+            <p onClick={() => openDeleteModal(item._id)} className="cursor remove-btn">
               Xóa
             </p>
           </div>
         ))}
-        {tables.length === 0 && (
+         {tables.length === 0 && (
           <p className="empty-message">
             {branches.length === 0 
               ? "Chưa có chi nhánh nào. Vui lòng thêm chi nhánh trước." 
@@ -120,6 +242,14 @@ const TableList = ({ url }) => {
           </p>
         )}
       </div>
+
+      <ConfirmModal 
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        onConfirm={handleConfirmDelete}
+        title={modal.title}
+        message={modal.message}
+      />
     </div>
   );
 };

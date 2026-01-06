@@ -1,75 +1,40 @@
 .food-display {
-    margin: 0;
-    padding: 4rem 0;
-    animation: fadeIn 0.8s ease-out;
-    background: var(--color-bg-secondary);
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
+    margin-top: 30px;
 }
 
 .food-display h2 {
-    font-family: var(--font-heading);
-    font-size: clamp(2rem, 4vw, 3.5rem);
-    font-weight: 700;
-    color: var(--color-text);
-    margin-bottom: 3rem;
-    letter-spacing: -0.02em;
-    text-align: center;
+    font-size: max(2vw, 24px);
+    font-weight: 600;
 }
 
 .food-display-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    margin-top: 30px;
+    gap: 30px;
+    row-gap: 50px;
+}
+
+/* Category Section Styling */
+.food-category-section {
+    margin-bottom: 40px;
+}
+
+.category-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4E342E; /* Rustic Brown */
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #f1bf4d; /* Yellow accent border */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.food-item-skeleton {
     width: 100%;
-}
-
-@media (max-width: 1050px) {
-    .food-display {
-        padding: 3rem 0;
-    }
-    
-    .food-display-list {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1.5rem;
-        padding: 0 1.5rem;
-    }
-}
-
-@media (max-width: 750px) {
-    .food-display {
-        padding: 2.5rem 0;
-    }
-    
-    .food-display h2 {
-        margin-bottom: 2rem;
-        padding: 0 1rem;
-    }
-    
-    .food-display-list {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.25rem;
-        padding: 0 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .food-display {
-        padding: 2rem 0;
-    }
-    
-    .food-display-list {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        padding: 0 1rem;
-    }
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0px 0px 10px #00000015;
+    background: #fff;
 }

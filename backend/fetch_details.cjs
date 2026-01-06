@@ -35,7 +35,10 @@ function fetchDetail(proId) {
         res.on('end', () => {
             try {
                 const json = JSON.parse(responseData);
-                console.log(`ProId: ${proId}, Name: ${json.Data.ProName}, Sapo: ${json.Data.ProSapo}`);
+                console.log(`ProId: ${proId}`);
+                console.log(`  Img: ${json.Data.ProAvatar}`); 
+                console.log(`  ImgLarge: ${json.Data.ProImage}`);
+                console.log(`  ProImgs: ${json.Data.ProImgs}`);
             } catch (e) {
                 console.error(`Error parsing JSON for ${proId}:`, e.message);
                 console.log(responseData);

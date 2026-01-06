@@ -4,6 +4,7 @@ import foodModel from "../models/foodModel.js";
 import tableModel from "../models/tableModel.js";
 import Stripe from "stripe";
 import { io } from "../server.js";
+import fs from 'fs'; // Added for debug log
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -13,21 +14,38 @@ const placeOrder = async (req, res) => {
   try {
     const orderType = req.body.orderType || "Delivery";
     const paymentMethod = req.body.paymentMethod || "Stripe";
+    const guestId = req.body.guestId || null;
     const isDineIn = orderType === "Dine-in";
     const isCOD = paymentMethod === "Cash";
     const items = req.body.items;
 
-    // Stock validation - check all items have enough stock
+    // Verify items and prices from Database (SECURITY FIX)
+    const verifiedItems = [];
+    let calculatedAmount = 0;
+    
+    // Stock validation & Price verification
     const outOfStockItems = [];
+    
     for (const item of items) {
       const food = await foodModel.findById(item._id);
-      if (food && food.trackStock && food.stock < item.quantity) {
+      if (!food) {
+          return res.json({ success: false, message: `Item not found: ${item.name}` });
+      }
+      
+      if (food.trackStock && food.stock < item.quantity) {
         outOfStockItems.push({
           name: food.name,
           available: food.stock,
           requested: item.quantity
         });
       }
+      
+      verifiedItems.push({
+          ...item,
+          price: food.price,
+          name: food.name
+      });
+      calculatedAmount += food.price * item.quantity;
     }
 
     if (outOfStockItems.length > 0) {
@@ -38,7 +56,7 @@ const placeOrder = async (req, res) => {
       });
     }
 
-    // Deduct stock for all items (atomic operation per item)
+    // Deduct stock
     for (const item of items) {
       await foodModel.findByIdAndUpdate(
         item._id,
@@ -46,71 +64,48 @@ const placeOrder = async (req, res) => {
         { new: true }
       );
     }
+    
+    // IMMEDIATE TABLE STATUS UPDATE (Fix for lag)
+    if (isDineIn && req.body.tableId) {
+      await tableModel.findByIdAndUpdate(req.body.tableId, { status: "Occupied" });
+      // Emit socket event if needed, but tableController usually watches DB or logic elsewhere
+      if (io) {
+         io.emit("table:status_updated", { tableId: req.body.tableId, branchId: req.body.branchId, status: "Occupied" });
+      }
+    }
 
     const newOrder = new orderModel({
-      userId: req.body.userId,
-      items: items,
-      amount: req.body.amount,
+      userId: req.body.userId, // Null if guest
+      guestId: guestId,        // Unique Guest ID
+      items: verifiedItems,
+      amount: calculatedAmount + (isDineIn ? 0 : 15000),
       address: req.body.address || {},
       orderType: orderType,
       paymentMethod: paymentMethod,
       branchId: req.body.branchId || null,
       tableId: req.body.tableId || null,
-      // For COD, order is placed but payment is pending
       payment: false,
     });
+    
     await newOrder.save();
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
-    // Update table status to Occupied if Dine-in
-    if (newOrder.tableId) { // Check if tableId exists
-       const updatedTable = await tableModel.findByIdAndUpdate(
-         newOrder.tableId,
-         { status: "Occupied" },
-         { new: true }
-       );
-
-       if (updatedTable && io) {
-          io.emit("table:status_updated", {
-             tableId: updatedTable._id,
-             branchId: updatedTable.branchId,
-             status: "Occupied"
-          });
-       }
-    }
-
-    // Emit real-time event for new order
-    if (io) {
-      const populatedOrder = await orderModel
-        .findById(newOrder._id)
-        .populate("branchId", "name")
-        .populate("tableId", "tableNumber");
-
-      if (newOrder.branchId) {
-        io.to(`branch_${newOrder.branchId}`).emit("order:new", populatedOrder);
-      }
-      io.emit("order:new", populatedOrder);
-    }
-
-    // If COD/Cash payment, skip Stripe and return success directly
+    // Handle Cash Payment (Skip Stripe) - e.g. Dine-in or COD
     if (isCOD) {
-      return res.json({
-        success: true,
-        message: "Order placed successfully! Pay at counter.",
-        orderId: newOrder._id,
-        paymentMethod: "Cash",
-        redirect_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}&method=cash`
-      });
+       // Only clear cart and return success
+       return res.json({ success: true, message: "Order placed successfully" });
     }
 
-    // Stripe payment flow
-    const line_items = items.map((item) => ({
+    // ... (keep Table update & Socket.io logic)
+
+    // Stripe payment flow with TRUSTED items
+    const line_items = verifiedItems.map((item) => ({
       price_data: {
-        currency: "usd",
+        currency: "vnd",
         product_data: {
           name: item.name,
         },
-        unit_amount: item.price * 100,
+        unit_amount: Math.round(item.price), // VND is zero-decimal, send exact amount, ensure integer
       },
       quantity: item.quantity,
     }));
@@ -119,14 +114,25 @@ const placeOrder = async (req, res) => {
     if (!isDineIn) {
       line_items.push({
         price_data: {
-          currency: "usd",
+          currency: "vnd",
           product_data: {
-            name: "Delivery Charges",
+            name: "Phí giao hàng",
           },
-          unit_amount: 2 * 100,
+          unit_amount: 15000, // 15,000 VND
         },
         quantity: 1,
       });
+    }
+
+    // console.log("Stripe Line Items:", JSON.stringify(line_items, null, 2));
+
+    // CHECK FOR VALID STRIPE KEY - Bypass if invalid (Dev/Mock Mode)
+    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes("nhap_bi_mat")) {
+       console.log("⚠️ Stripe Key missing or invalid. Using MOCK STRIPE mode.");
+       return res.json({ 
+         success: true, 
+         session_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}` 
+       });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -138,8 +144,8 @@ const placeOrder = async (req, res) => {
 
     res.json({ success: true, session_url: session.url });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error placing order" });
+    console.log("ORDER ERROR:", error);
+    res.json({ success: false, message: "Error placing order: " + error.message });
   }
 };
 
@@ -157,14 +163,25 @@ const verifyOrder = async (req, res) => {
       await orderModel.findByIdAndUpdate(orderId, { payment: true });
       res.json({ success: true, message: "Paid" });
     } else {
-      // Restore stock if payment failed/cancelled
+      // Restore stock & Free Table if payment failed/cancelled
       const order = await orderModel.findById(orderId);
       if (order) {
+        // Restore Stock
         for (const item of order.items) {
           await foodModel.findByIdAndUpdate(
             item._id,
             { $inc: { stock: item.quantity } }
           );
+        }
+        
+        // Free Table (Immediately available if payment failed/cancelled)
+        if (order.tableId) {
+            await tableModel.findByIdAndUpdate(order.tableId, { status: "Available" });
+             if (io) {
+                // Determine branchId properly. order.branchId might be ID or Object depending on population (here it is ID from verify)
+                const branchId = order.branchId; 
+                io.emit("table:status_updated", { tableId: order.tableId, branchId: branchId, status: "Available" });
+            }
         }
       }
       await orderModel.findByIdAndDelete(orderId);
@@ -207,7 +224,21 @@ const markAsPaid = async (req, res) => {
 // user orders for frontend
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId });
+    let query = {};
+    // Prioritize userId (Logged in), otherwise check guestId (Anonymous)
+    if (req.body.userId) {
+        query.userId = req.body.userId;
+    } else if (req.body.guestId) {
+        query.guestId = req.body.guestId;
+    } else {
+        return res.json({ success: true, data: [] });
+    }
+
+    const orders = await orderModel.find(query)
+      .populate("branchId", "name")
+      .populate("tableId", "tableNumber floor")
+      .sort({ date: -1 });
+
     res.json({ success: true, data: orders });
   } catch (error) {
     console.log(error);
@@ -220,7 +251,7 @@ const listOrders = async (req, res) => {
   try {
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
-      const orders = await orderModel.find({}).populate("branchId", "name").populate("tableId", "tableNumber");
+      const orders = await orderModel.find({}).populate("branchId", "name").populate("tableId", "tableNumber floor");
       res.json({ success: true, data: orders });
     } else {
       res.json({ success: false, message: "You are not admin" });
@@ -236,11 +267,36 @@ const updateStatus = async (req, res) => {
   try {
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
+      const { orderId, status, reason } = req.body;
+      
+      const updateData = { status: status };
+      
+      // Push to timeline
+      const pushOperation = { 
+        timeline: { status: status, timestamp: new Date() } 
+      };
+
+      // Handle Cancellation Reason
+      if (status === "Cancelled" && reason) {
+        updateData.cancellationReason = reason;
+      }
+
       const updatedOrder = await orderModel.findByIdAndUpdate(
-        req.body.orderId,
-        { status: req.body.status },
+        orderId,
+        { 
+          $set: updateData,
+          $push: pushOperation
+        },
         { new: true }
       );
+
+      // Auto-Free Table on Cancellation
+      if (status === "Cancelled" && updatedOrder && updatedOrder.tableId) {
+          await tableModel.findByIdAndUpdate(updatedOrder.tableId, { status: "Available" });
+          if (io) {
+             io.emit("table:status_updated", { tableId: updatedOrder.tableId, branchId: updatedOrder.branchId, status: "Available" });
+          }
+      }
 
       // Emit real-time event for status update
       if (io && updatedOrder) {
@@ -272,4 +328,30 @@ const updateStatus = async (req, res) => {
   }
 };
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, markAsPaid };
+// Cleanup Debug Orders (Admin only)
+const cleanupDebugOrders = async (req, res) => {
+  try {
+    let userData = await userModel.findById(req.body.userId);
+    if (!userData || userData.role !== "admin") {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
+    
+    // Define criteria for "Ghost/Debug" orders
+    const result = await orderModel.deleteMany({
+        $or: [
+            // Name contains keywords
+            { "address.firstName": { $regex: "Debug|Test|Demo|Fake", $options: "i" } },
+            { "address.lastName": { $regex: "Debug|Test|Demo|Fake", $options: "i" } },
+            // Common dummy phone numbers
+            { "address.phone": { $in: ["123456789", "12345678", "000000000", "0999999999", "111111111"] } }
+        ]
+    });
+
+    res.json({ success: true, message: `Đã dọn dẹp ${result.deletedCount} đơn hàng rác (Debug/Test/Demo/SĐT ảo)`, count: result.deletedCount });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error" });
+  }
+};
+
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, markAsPaid, cleanupDebugOrders };

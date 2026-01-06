@@ -1,6 +1,7 @@
 .cart {
-    margin-top: 8rem;
+    margin-top: 100px; /* Account for fixed navbar */
     padding: 2rem 0;
+    padding-bottom: 4rem; /* Extra space for footer */
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
@@ -158,9 +159,10 @@
 }
 
 .cart-total button {
+    display: block;
     border: none;
-    color: white;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: #4E342E; /* Rustic Brown Text */
+    background: linear-gradient(135deg, #f1bf4d 0%, #C9A961 100%); /* Gold Gradient */
     width: 100%;
     padding: 1rem 2rem;
     border-radius: 12px;
@@ -175,8 +177,8 @@
 
 .cart-total button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 107, 0, 0.4);
-    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    box-shadow: 0 6px 16px rgba(241, 191, 77, 0.4);
+    background: linear-gradient(135deg, #E5C158 0%, #f1bf4d 100%);
 }
 
 .cart-total button:active {
@@ -257,15 +259,22 @@
     .cart {
         margin-top: 6rem;
         padding: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        margin-left: 0;
+        margin-right: 0;
+        max-width: 100%;
     }
     
     .cart-items {
-        padding: 1.5rem;
+        padding: 1.25rem;
+        border-radius: 20px;
     }
     
     .cart-items-title {
         grid-template-columns: 0.8fr 2fr 1fr 1fr;
-        font-size: 11px;
+        font-size: 10px;
+        padding: 0.75rem 0;
     }
     
     .cart-items-title p:nth-child(4),
@@ -273,25 +282,133 @@
         display: none;
     }
     
+    .cart-items-item {
+        padding: 1rem 0;
+        grid-template-columns: 0.8fr 2fr 1fr 1fr 0.6fr;
+    }
+    
     .cart-items-item img {
-        width: 60px;
-        height: 60px;
+        width: 55px;
+        height: 55px;
     }
     
     .cart-items-item p {
-        font-size: 13px;
+        font-size: 12px;
+    }
+    
+    .cart-items-item .cross {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
     }
     
     .cart-total,
     .cart-promocode {
-        padding: 1.5rem;
+        padding: 1.25rem;
+        border-radius: 20px;
+    }
+    
+    .cart-total h2 {
+        font-size: 1.5rem;
     }
     
     .cart-promocode-input {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
+    .cart-promocode-input input,
     .cart-promocode-input button {
         width: 100%;
+        min-height: 44px; /* Touch target */
+    }
+}
+
+@media (max-width: 480px) {
+    .cart {
+        margin-top: 85px; /* Account for fixed navbar on mobile */
+        padding: 0.75rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        padding-bottom: 3rem; /* Space for footer */
+        margin-left: 0;
+        margin-right: 0;
+        max-width: 100%;
+    }
+    
+    .cart-items {
+        padding: 0.875rem;
+        border-radius: 16px;
+    }
+    
+    .cart-items-title {
+        font-size: 8px;
+        grid-template-columns: 1fr 2fr 1fr 0.6fr;
+        padding: 0.625rem 0;
+    }
+    
+    .cart-items-item {
+        grid-template-columns: 1fr 2fr 1fr 0.6fr;
+        padding: 0.875rem 0;
+    }
+    
+    .cart-items-item img {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .cart-items-item p {
+        font-size: 11px;
+    }
+    
+    .cart-total,
+    .cart-promocode {
+        padding: 1rem;
+        border-radius: 16px;
+    }
+    
+    .cart-total h2 {
+        font-size: clamp(1.125rem, 5vw, 1.25rem);
+    }
+    
+    .cart-total-details {
+        font-size: 13px;
+        padding: 0.625rem 0;
+    }
+    
+    .cart-total-details b {
+        font-size: 15px;
+    }
+    
+    .cart-total-details:last-child b {
+        font-size: 1.125rem;
+    }
+    
+    .cart-total button {
+        padding: 0.75rem 1.25rem;
+        font-size: 13px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 360px) {
+    .cart {
+        padding: 0.625rem;
+    }
+    
+    .cart-items-title {
+        font-size: 7px;
+    }
+    
+    .cart-items-item p {
+        font-size: 10px;
+    }
+    
+    .cart-total h2 {
+        font-size: 1rem;
+    }
+    
+    .cart-total-details {
+        font-size: 12px;
     }
 }

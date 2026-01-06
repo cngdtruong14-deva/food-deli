@@ -1,0 +1,57 @@
+.trash-table-format {
+    display: grid;
+    grid-template-columns: 0.5fr 2fr 1fr 1fr 0.5fr 1.5fr;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border: 1px solid #cacaca;
+    font-size: 13px;
+}
+
+.trash-table-format.title {
+    background-color: #f9f9f9;
+}
+
+.trash-img {
+    width: 50px;
+    border-radius: 4px;
+}
+
+.trash-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.restore-btn {
+    color: #059669;
+    font-weight: 500;
+    cursor: pointer;
+    background: #D1FAE5;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.restore-btn:hover {
+    background: #A7F3D0;
+}
+
+.delete-forever-btn {
+    color: #DC2626;
+    font-weight: 500;
+    cursor: pointer;
+    background: #FEE2E2;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.delete-forever-btn:hover {
+    background: #FECACA;
+}
+
+.empty-trash {
+    margin-top: 30px;
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+}

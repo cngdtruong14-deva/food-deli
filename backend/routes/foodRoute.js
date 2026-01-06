@@ -1,5 +1,5 @@
 import express from "express";
-import { addFood, listFood, removeFood, listCategories } from "../controllers/foodController.js";
+import { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood } from "../controllers/foodController.js";
 import multer from "multer";
 import authMiddleware from "../middleware/auth.js";
 
@@ -20,6 +20,10 @@ foodRouter.post("/add",upload.single("image"),authMiddleware,addFood);
 foodRouter.get("/list",listFood);
 foodRouter.get("/categories",listCategories);
 foodRouter.post("/remove",authMiddleware,removeFood);
+foodRouter.get("/trash", listTrashFood);
+foodRouter.post("/restore", authMiddleware, restoreFood);
+foodRouter.post("/force-delete", authMiddleware, forceDeleteFood);
+foodRouter.post("/update", upload.single("image"), authMiddleware, updateFood);
 
 export default foodRouter;
 

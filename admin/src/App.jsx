@@ -13,16 +13,17 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Login from "./components/Login/Login";
+import Trash from "./pages/Trash/Trash";
+import Inventory from "./pages/Inventory/Inventory";
 
 const App = () => {
-  const url = "http://localhost:4000";
+  const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
   return (
-    <div>
+    <div className="admin-app">
       <ToastContainer />
       <Navbar />
-      <hr />
-      <div className="app-content">
-        <Sidebar />
+      <Sidebar />
+      <div className="app-content page-fade-in">
         <Routes>
           <Route path="/" element={<Login url={url}/>} />
           <Route path="/dashboard" element={<Dashboard url={url}/>} />
@@ -33,6 +34,10 @@ const App = () => {
           <Route path="/branches/add" element={<AddBranch url={url}/>} />
           <Route path="/tables" element={<TableList url={url}/>} />
           <Route path="/tables/add" element={<AddTable url={url}/>} />
+          <Route path="/tables/add" element={<AddTable url={url}/>} />
+          <Route path="/tables/add" element={<AddTable url={url}/>} />
+          <Route path="/inventory" element={<Inventory url={url}/>} />
+          <Route path="/trash" element={<Trash url={url}/>} />
         </Routes>
       </div>
     </div>

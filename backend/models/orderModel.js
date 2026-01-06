@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
+  userId: { type: String, default: null },
+  guestId: { type: String, default: null },
   branchId: { type: mongoose.Schema.Types.ObjectId, ref: "branch", default: null },
   tableId: { type: mongoose.Schema.Types.ObjectId, ref: "table", default: null },
   orderType: { 
@@ -24,6 +25,11 @@ const orderSchema = new mongoose.Schema({
   },
   date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
+  timeline: [{
+    status: String, 
+    timestamp: { type: Date, default: Date.now }
+  }],
+  cancellationReason: { type: String, default: null }
 });
 
 const orderModel =

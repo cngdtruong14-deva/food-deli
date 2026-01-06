@@ -3,7 +3,7 @@ import { StoreContext } from "../../context/StoreContext";
 import "./Header.css";
 
 const Header = () => {
-  const { food_list, url } = useContext(StoreContext);
+  const { food_list, url, isFoodLoading } = useContext(StoreContext);
   const [currentIndex, setCurrentIndex] = useState(0);
   // Filter for "Combo" or get top items if no Combos
   const [displayItems, setDisplayItems] = useState([]);
@@ -29,20 +29,30 @@ const Header = () => {
 
   return (
     <div className="header">
-      {displayItems.map((item, index) => (
-        <div 
-          key={item._id} 
-          className={`header-slide ${index === currentIndex ? "active" : ""}`}
-          style={{
-            backgroundImage: `url(${url}/images/${item.image})`
-          }}
-        />
-      ))}
-      {/* Fallback Static Image if no items */}
-      {displayItems.length === 0 && <div className="header-slide active static-bg" />}
+      {isFoodLoading ? (
+        <div className="header-slide active skeleton-loading"></div>
+      ) : displayItems.length > 0 ? (
+        displayItems.map((item, index) => (
+          <div 
+            key={item._id} 
+            className={`header-slide ${index === currentIndex ? "active" : ""}`}
+            style={{
+              backgroundImage: `url(${url}/images/${item.image})`
+            }}
+          />
+        ))
+      ) : (
+        <div className="header-slide active static-bg" />
+      )}
 
       <div className="header-contents">
-        {currentItem ? (
+        {isFoodLoading ? (
+          <div className="header-skeleton-content">
+             <div className="skeleton-text title"></div>
+             <div className="skeleton-text desc"></div>
+             <div className="skeleton-btn"></div>
+          </div>
+        ) : currentItem ? (
           <>
             <h2 key={currentItem._id + "-title"} className="slide-title">{currentItem.name}</h2>
             <p key={currentItem._id + "-desc"} className="slide-desc">{currentItem.description}</p>

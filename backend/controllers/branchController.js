@@ -1,4 +1,5 @@
 import branchModel from "../models/branchModel.js";
+import tableModel from "../models/tableModel.js";
 import userModel from "../models/userModel.js";
 
 // Add branch (Admin only)
@@ -27,7 +28,21 @@ const addBranch = async (req, res) => {
 const listBranches = async (req, res) => {
   try {
     const branches = await branchModel.find({ isActive: true });
-    res.json({ success: true, data: branches });
+    
+    // Calculate occupancy rate for each branch
+    const branchData = await Promise.all(branches.map(async (branch) => {
+      const tables = await tableModel.find({ branchId: branch._id });
+      const totalTables = tables.length;
+      const occupiedTables = tables.filter(t => t.status !== "Available").length;
+      const occupancyRate = totalTables === 0 ? 0 : Math.round((occupiedTables / totalTables) * 100);
+      
+      return {
+        ...branch.toObject(),
+        occupancyRate
+      };
+    }));
+
+    res.json({ success: true, data: branchData });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error fetching branches" });

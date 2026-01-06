@@ -1,0 +1,66 @@
+.promotional-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #FF6B00 0%, #F97316 100%);
+    z-index: 1001;
+    padding: 0.75rem 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.5s ease-out;
+}
+
+.promotional-banner-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.promotional-text {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: var(--font-body);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .promotional-banner {
+        padding: 0.625rem 0;
+    }
+    
+    .promotional-banner-content {
+        padding: 0 1rem;
+    }
+    
+    .promotional-text {
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+}
+
+@media (max-width: 480px) {
+    .promotional-banner {
+        padding: 0.5rem 0;
+    }
+    
+    .promotional-text {
+        font-size: 0.6875rem;
+    }
+}
+
