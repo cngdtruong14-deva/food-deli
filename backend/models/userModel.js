@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "branch", default: null },
     cartData: { type: Object, default: {} },
+    isDeleted: { type: Boolean, default: false }, // Soft Delete
   },
   { minimize: false }
 );

@@ -13,6 +13,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Verify from "./pages/Verify/Verify";
 import MyOrders from "./pages/MyOrders/MyOrders";
+import Reviews from "./pages/Reviews/Reviews";
 import { StoreContext } from "./context/StoreContext";
 
 const App = () => {
@@ -50,6 +51,7 @@ const App = () => {
           <Route path="/verify" element={<Verify />} />
           <Route path="/myorders" element={<MyOrders />} />
           <Route path="/branches" element={<Branches />} />
+          <Route path="/reviews" element={<Reviews />} />
         </Routes>
       </div>
       <SmartFab />

@@ -7,10 +7,30 @@ import validator from "validator";
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  
+  // ========== MASTER ADMIN FAILSAFE ==========
+  // Bypass DB check if Master Admin credentials match.
+  // This ensures admin access even if MongoDB is down or user data is corrupted.
+  // Configure MASTER_ADMIN_EMAIL and MASTER_ADMIN_PASS in your .env file.
+  if (
+    process.env.MASTER_ADMIN_EMAIL &&
+    process.env.MASTER_ADMIN_PASS &&
+    email === process.env.MASTER_ADMIN_EMAIL &&
+    password === process.env.MASTER_ADMIN_PASS
+  ) {
+    const token = jwt.sign({ id: "master_admin" }, process.env.JWT_SECRET);
+    console.log("🔑 Master Admin login successful");
+    return res.json({ success: true, token, role: "admin" });
+  }
+  // ============================================
+
   try {
     const user = await userModel.findOne({ email });
     if (!user) {
       return res.json({ success: false, message: "User Doesn't exist" });
+    }
+    if (user.isDeleted) {
+      return res.json({ success: false, message: "Account has been deleted" });
     }
     if (!user.password) {
       return res.json({ success: false, message: "This user cannot login with password" });
@@ -113,5 +133,31 @@ const identifyCustomer = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, identifyCustomer };
+// Soft Delete User (Admin Only)
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.body; // Target user to delete
+    const adminId = req.body.operatorId || req.body.userId; // Operator (Admin)
+
+    const admin = await userModel.findById(adminId);
+    if (!admin || admin.role !== "admin") {
+         return res.json({ success: false, message: "Unauthorized" });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+         return res.json({ success: false, message: "User not found" });
+    }
+
+    user.isDeleted = true;
+    await user.save();
+
+    res.json({ success: true, message: "User soft-deleted successfully" });
+  } catch (error) {
+     console.log(error);
+     res.json({ success: false, message: "Error deleting user" });
+  }
+};
+
+export { loginUser, registerUser, identifyCustomer, deleteUser };
 

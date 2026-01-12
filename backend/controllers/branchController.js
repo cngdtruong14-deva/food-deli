@@ -24,10 +24,24 @@ const addBranch = async (req, res) => {
   }
 };
 
-// List all branches
+// List branches (Role Aware)
 const listBranches = async (req, res) => {
   try {
-    const branches = await branchModel.find({ isActive: true });
+    const userId = req.body.userId || req.query.userId;
+    let query = { isActive: true };
+
+    // Role Check - FIX: Handle "null" string properly
+    if (userId && userId !== 'null' && userId !== 'undefined') {
+        const user = await userModel.findById(userId);
+        if (user && user.role === 'manager') {
+             // Manager can ONLY see their own branch
+             query._id = user.branchId;
+        }
+        // Admin users can see all branches (no query restriction)
+    }
+    // If no valid userId, show all active branches (for general access)
+
+    const branches = await branchModel.find(query);
     
     // Calculate occupancy rate for each branch
     const branchData = await Promise.all(branches.map(async (branch) => {
@@ -44,7 +58,7 @@ const listBranches = async (req, res) => {
 
     res.json({ success: true, data: branchData });
   } catch (error) {
-    console.log(error);
+    console.error('[branchController] listBranches ERROR:', error.message);
     res.json({ success: false, message: "Error fetching branches" });
   }
 };

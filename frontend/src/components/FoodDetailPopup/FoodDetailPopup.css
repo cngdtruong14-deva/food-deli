@@ -310,3 +310,44 @@
         font-size: 0.9375rem;
     }
 }
+
+/* Note Input Section (Added for Order Notes) */
+.food-detail-note-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.food-detail-note-section label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.food-detail-note-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s;
+    background: white;
+}
+
+.food-detail-note-input:focus {
+    border-color: #f1bf4d;
+    box-shadow: 0 0 0 3px rgba(241, 191, 77, 0.2);
+}
+
+.note-char-count {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}

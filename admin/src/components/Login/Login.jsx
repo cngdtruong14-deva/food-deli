@@ -20,20 +20,27 @@ const Login = ({ url }) => {
   };
   const onLogin = async (event) => {
     event.preventDefault();
-    const response = await axios.post(url + "/api/user/login", data);
-    if (response.data.success) {
-      if (response.data.role === "admin") {
-        setToken(response.data.token);
-        setAdmin(true);
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("admin", true);
-        toast.success("Login Successfully");
-        navigate("/add")
-      }else{
-        toast.error("You are not an admin");
+    console.log("Attempting login to:", url + "/api/user/login");
+    try {
+      const response = await axios.post(url + "/api/user/login", data);
+      console.log("Login Response:", response.data);
+      if (response.data.success) {
+        if (response.data.role === "admin") {
+          setToken(response.data.token);
+          setAdmin(true);
+          localStorage.setItem("token", response.data.token);
+          localStorage.setItem("admin", true);
+          toast.success("Login Successfully");
+          navigate("/add")
+        }else{
+          toast.error("You are not an admin");
+        }
+      } else {
+        toast.error(response.data.message);
       }
-    } else {
-      toast.error(response.data.message);
+    } catch (error) {
+      console.error("Login Error Details:", error);
+      toast.error("Login Failed: " + (error.response?.data?.message || error.message));
     }
   };
   useEffect(()=>{

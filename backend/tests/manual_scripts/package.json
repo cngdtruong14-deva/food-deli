@@ -1,0 +1,17 @@
+{
+  "name": "manual-tests",
+  "version": "1.0.0",
+  "description": "QA Scripts",
+  "main": "index.js",
+  "scripts": {
+    "test:transaction": "node test_transaction.js",
+    "test:socket": "node test_socket_security.js",
+    "test:emit": "node test_double_emit.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "socket.io-client": "^4.7.0",
+    "dotenv": "^16.3.0",
+    "chalk": "^4.1.2"
+  }
+}

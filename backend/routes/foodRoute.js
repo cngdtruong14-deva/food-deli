@@ -1,5 +1,5 @@
 import express from "express";
-import { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood } from "../controllers/foodController.js";
+import { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood } from "../controllers/foodController.js";
 import multer from "multer";
 import authMiddleware from "../middleware/auth.js";
 
@@ -18,6 +18,7 @@ const upload= multer({storage:storage})
 
 foodRouter.post("/add",upload.single("image"),authMiddleware,addFood);
 foodRouter.get("/list",listFood);
+foodRouter.get("/search", searchFood);
 foodRouter.get("/categories",listCategories);
 foodRouter.post("/remove",authMiddleware,removeFood);
 foodRouter.get("/trash", listTrashFood);

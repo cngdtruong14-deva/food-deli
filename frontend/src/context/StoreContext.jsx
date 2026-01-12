@@ -1,22 +1,56 @@
 import axios from "axios";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
+import { io } from "socket.io-client";
 
 export const StoreContext = createContext(null);
+
+// Helper: Extract userId from JWT token
+const getUserIdFromToken = (token) => {
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded.id || null;
+  } catch (e) {
+    console.error("Failed to decode token:", e);
+    return null;
+  }
+};
+
+// Helper: Vietnamese status messages
+const getStatusMessage = (status) => {
+  const messages = {
+    "Pending": "🕒 Đơn hàng đang chờ xác nhận",
+    "Confirmed": "✅ Đơn hàng đã được xác nhận!",
+    "Preparing": "👨‍🍳 Bếp đang chuẩn bị món của bạn",
+    "Food Processing": "🔥 Món ăn đang được nấu",
+    "Out for delivery": "🚚 Shipper đang giao hàng đến bạn!",
+    "Served": "🍽️ Món ăn đã được phục vụ!",
+    "Delivered": "🎉 Đơn hàng đã giao thành công!",
+    "Paid": "💰 Đã thanh toán thành công!",
+    "Cancelled": "❌ Đơn hàng đã bị hủy"
+  };
+  return messages[status] || `Trạng thái đơn hàng: ${status}`;
+};
 
 const StoreContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
   const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  console.log("Current API URL:", url);
   const [token, setToken] = useState("");
   const [guestId, setGuestId] = useState(""); // Guest Identity
   const [food_list, setFoodList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Socket.io reference
+  const socketRef = useRef(null);
+  
   // Dine-in context
   const [tableId, setTableId] = useState(null);
   const [branchId, setBranchId] = useState(null);
-  const [orderType, setOrderType] = useState("Delivery");
+  const [orderType, setOrderType] = useState(""); // Default to Not Selected
   const [tableName, setTableName] = useState("");
 
   // Set dine-in context from QR scan
@@ -50,128 +84,117 @@ const StoreContextProvider = (props) => {
     localStorage.removeItem("dineInSession");
   };
 
-  const addToCart = async (itemId) => {
+  // Helper to parse cart key
+  const parseCartKey = (key) => {
+      const parts = key.split('_note_');
+      return {
+          itemId: parts[0],
+          note: parts.length > 1 ? parts[1] : ""
+      };
+  };
+
+  const addToCart = async (itemId, note = "") => {
+    // Generate Key
+    const key = note ? `${itemId}_note_${note}` : itemId;
+    
+    // Check Stock across all variants
     const itemInfo = food_list.find((product) => product._id === itemId);
-    const currentQuantity = cartItems[itemId] || 0;
+    
+    // Calculate total quantity of this item across all notes
+    let totalStockUsed = 0;
+    for (const k in cartItems) {
+        if (parseCartKey(k).itemId === itemId) {
+            totalStockUsed += cartItems[k];
+        }
+    }
 
     if (itemInfo && itemInfo.stock !== undefined && itemInfo.trackStock) {
-        if (currentQuantity + 1 > itemInfo.stock) {
+        if (totalStockUsed + 1 > itemInfo.stock) {
             toast.error("Đã hết hàng hoặc vượt quá số lượng tồn kho!");
             return;
         }
     }
 
-    if (!cartItems[itemId]) {
-      setCartItems((prev) => ({ ...prev, [itemId]: 1 }));
+    if (!cartItems[key]) {
+      setCartItems((prev) => ({ ...prev, [key]: 1 }));
     } else {
-      setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
+      setCartItems((prev) => ({ ...prev, [key]: prev[key] + 1 }));
     }
-    // Only sync cart with backend if logged in (users), 
-    // Guests keep cart local (or we could implement guest cart backend sync later)
+    
     if (token) {
-      const response = await axios.post(
+      await axios.post(
         url + "/api/cart/add",
-        { itemId },
+        { itemId: key, note }, // Send Key as itemId (or handle in backend), passing note separately for legacy/hybrid
         { headers: { token } }
       );
-      if (response.data.success) {
-        toast.success("Đã thêm vào giỏ hàng");
-      } else {
-        toast.error("Có lỗi xảy ra");
-      }
+      toast.success(note ? "Đã thêm (có ghi chú)" : "Đã thêm vào giỏ hàng");
     }
   };
 
-  const removeFromCart = async (itemId) => {
-    setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
-    if (token) {
-      const response = await axios.post(
-        url + "/api/cart/remove",
-        { itemId },
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        toast.success("Đã xóa khỏi giỏ hàng");
-      } else {
-        toast.error("Có lỗi xảy ra");
-      }
-    }
-  };
-
-  // ... (getTotalCartAmount, fetchFoodList, fetchCategories, loadCardData, fetchBranches) ...
-  // Wait, I need to include these or they will be lost.
-  // Actually, I should use StartLine/EndLine to target specific blocks to minimize disruption.
-  // But the tool doesn't support skipping.
-  // I will just replace the initial specific state declarations and use `multi_replace` or smaller chunks if possible.
-  // No, I'll use `replace_file_content` on the top block and the bottom block (useEffect).
-  
-  // Actually, I'll just Replace the top lines 10-40 and the useEffect at 170.
-  
-  /* THIS TOOL CALL IS ONLY FOR TOP BLOCK */
-
-
-  // Clear dine-in context
-  const clearDineInContext = () => {
-    setTableId(null);
-    setBranchId(null);
-    setOrderType("Delivery");
-    setTableName("");
-    localStorage.removeItem("dineInSession");
-  };
-
-  const addToCart = async (itemId) => {
-    const itemInfo = food_list.find((product) => product._id === itemId);
-    const currentQuantity = cartItems[itemId] || 0;
-
-    if (itemInfo && itemInfo.stock !== undefined && itemInfo.trackStock) {
-        if (currentQuantity + 1 > itemInfo.stock) {
-            toast.error("Đã hết hàng hoặc vượt quá số lượng tồn kho!");
-            return;
+  const removeFromCart = async (key) => {
+    setCartItems((prev) => {
+        const newCart = { ...prev };
+        if (newCart[key] > 1) {
+            newCart[key] -= 1;
+        } else {
+            delete newCart[key];
         }
-    }
+        return newCart;
+    });
 
-    if (!cartItems[itemId]) {
-      setCartItems((prev) => ({ ...prev, [itemId]: 1 }));
-    } else {
-      setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
-    }
     if (token) {
-      const response = await axios.post(
-        url + "/api/cart/add",
-        { itemId },
+      await axios.post(
+        url + "/api/cart/remove",
+        { itemId: key }, // Key contains the note info
         { headers: { token } }
       );
-      if (response.data.success) {
-        toast.success("Đã thêm vào giỏ hàng");
-      } else {
-        toast.error("Có lỗi xảy ra");
-      }
+      toast.success("Đã xóa khỏi giỏ hàng");
     }
   };
 
-  const removeFromCart = async (itemId) => {
-    setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
-    if (token) {
-      const response = await axios.post(
-        url + "/api/cart/remove",
-        { itemId },
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        toast.success("Đã xóa khỏi giỏ hàng");
-      } else {
-        toast.error("Có lỗi xảy ra");
+  const updateCartNote = async (itemId, oldNote, newNote, quantity) => {
+      // Current Key
+      const oldKey = oldNote ? `${itemId}_note_${oldNote}` : itemId;
+      const newKey = newNote ? `${itemId}_note_${newNote}` : itemId;
+
+      if (oldKey === newKey) return; // No change
+
+      setCartItems((prev) => {
+          const newCart = { ...prev };
+          // Remove old
+          delete newCart[oldKey];
+          // Add new (Merge)
+          if (newCart[newKey]) {
+              newCart[newKey] += quantity;
+          } else {
+              newCart[newKey] = quantity;
+          }
+          return newCart;
+      });
+
+      if (token) {
+          // Call new endpoint
+          // Note: We haven't added route for this yet, so we assume it exists or we use add/remove sequence?
+          // User Task 1.2 "Controller Update". So we SHOULD add route.
+          // But I need to add Route to `cartRoute.js`. Use fallback sequence if endpoint fails?
+          // Since I edited controller, I MUST edit Route file too.
+          // I will edit Route file in next step.
+          await axios.post(
+              url + "/api/cart/update-note",
+              { itemId, oldNote, newNote, quantity },
+              { headers: { token } }
+          );
       }
-    }
   };
 
   const getTotalCartAmount = () => {
     let totalAmount = 0;
-    for (const item in cartItems) {
-      if (cartItems[item] > 0) {
-        let itemInfo = food_list.find((product) => product._id === item);
+    for (const key in cartItems) {
+      if (cartItems[key] > 0) {
+        const { itemId } = parseCartKey(key);
+        let itemInfo = food_list.find((product) => product._id === itemId);
         if (itemInfo) {
-          totalAmount += itemInfo.price * cartItems[item];
+          totalAmount += itemInfo.price * cartItems[key];
         }
       }
     }
@@ -302,6 +325,88 @@ const StoreContextProvider = (props) => {
      }
   }, [food_list, cartItems]);
 
+  // ========== SOCKET.IO REAL-TIME NOTIFICATIONS ==========
+  useEffect(() => {
+    // Initialize socket connection
+    socketRef.current = io(url, {
+      transports: ["websocket", "polling"],
+      autoConnect: true,
+      auth: { token } // Send JWT for auth
+    });
+
+    const socket = socketRef.current;
+
+    socket.on("connect", () => {
+      console.log("🔌 Socket connected:", socket.id);
+      
+      // Join user room if logged in
+      const userId = getUserIdFromToken(token);
+      if (userId) {
+        socket.emit("join_user", userId);
+        console.log("📡 Joined user room:", userId);
+      }
+    });
+
+    // Listen for order status updates
+    socket.on("order:status_updated", (data) => {
+      console.log("📦 Order status update received:", data);
+      
+      // Show toast notification
+      const message = getStatusMessage(data.status);
+      
+      // Different toast types based on status
+      if (data.status === "Cancelled") {
+        toast.error(message, { icon: "❌" });
+      } else if (data.status === "Delivered" || data.status === "Served") {
+        toast.success(message, { icon: "🎉" });
+      } else {
+        toast.info(message, { autoClose: 5000 });
+      }
+    });
+
+    // Listen for Stock Updates (Real-time inventory sync)
+    socket.on("food:stock_updated", (updates) => {
+        console.log("📦 Stock update received:", updates);
+        setFoodList((prevList) => {
+            return prevList.map(food => {
+                const update = updates.find(u => u.id === food._id);
+                if (update) {
+                    return { ...food, stock: food.stock + update.change };
+                }
+                return food;
+            });
+        });
+    });
+
+    // Listen for Full Menu Updates (Admin changes)
+    socket.on("food:list_updated", () => {
+        console.log("📜 Menu update received. Refreshing list...");
+        fetchFoodList();
+    });
+
+    socket.on("disconnect", () => {
+      console.log("🔌 Socket disconnected");
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [url, token]);
+
+  // Re-join room when token changes (login/logout)
+  useEffect(() => {
+    if (socketRef.current && socketRef.current.connected) {
+      const userId = getUserIdFromToken(token);
+      if (userId) {
+        socketRef.current.emit("join_user", userId);
+        console.log("📡 Re-joined user room after token change:", userId);
+      }
+    }
+  }, [token]);
+
   const contextValue = {
     food_list,
     categories,
@@ -325,6 +430,8 @@ const StoreContextProvider = (props) => {
     setSearchQuery,
     branches,
     isFoodLoading,
+    // Socket for advanced usage
+    socket: socketRef.current,
   };
   
   return (

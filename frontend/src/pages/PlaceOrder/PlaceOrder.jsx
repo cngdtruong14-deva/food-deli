@@ -21,7 +21,8 @@ const PlaceOrder = () => {
     tableName,
     clearDineInContext,
     branches,
-    guestId
+    guestId,
+    setCartItems
   } = useContext(StoreContext);
 
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -69,12 +70,21 @@ const PlaceOrder = () => {
   const placeOrder = async (event) => {
     event.preventDefault();
     let orderItems = [];
-    food_list.forEach((item) => {
-      if (cartItems[item._id] > 0) {
-        let itemInfo = { ...item };
-        itemInfo["quantity"] = cartItems[item._id];
-        orderItems.push(itemInfo);
-      }
+    // REFACTORED LOOP: Iterate Cart Keys to support Notes (Composite Keys)
+    Object.keys(cartItems).forEach((key) => {
+        if (cartItems[key] > 0) {
+            const parts = key.split('_note_');
+            const itemId = parts[0];
+            const note = parts.length > 1 ? parts[1] : "";
+            
+            const item = food_list.find(f => f._id === itemId);
+            if (item) {
+                let itemInfo = { ...item };
+                itemInfo["quantity"] = cartItems[key];
+                itemInfo["note"] = note; // Task 1/3: Pass Note to Backend
+                orderItems.push(itemInfo);
+            }
+        }
     });
 
     // Check if effective order type is Dine-in
@@ -123,6 +133,7 @@ const PlaceOrder = () => {
     
     if (response.data.success) {
       if (paymentMethod === "Cash") {
+        setCartItems({}); // Clear local cart immediately
         toast.success(isOrdersDineIn ? "Đặt món thành công! Vui lòng đợi phục vụ." : "Đặt hàng thành công! Vui lòng thanh toán khi nhận hàng.");
         if (response.data.redirect_url) {
           window.location.replace(response.data.redirect_url);
@@ -373,23 +384,33 @@ const PlaceOrder = () => {
             <div className="place-order-card">
               <h3 className="place-order-card-title">Món đã chọn</h3>
               <div className="place-order-items">
-                {food_list.map((item, index) => {
-                  if (cartItems[item._id] > 0) {
-                    return (
-                      <div key={index} className="place-order-item">
-                        <img src={url + "/images/" + item.image} alt={item.name} />
-                        <div className="place-order-item-info">
-                          <p className="place-order-item-name">{item.name}</p>
-                          <p className="place-order-item-qty">
-                            {cartItems[item._id]} x {item.price.toLocaleString('vi-VN')} đ
+                {Object.keys(cartItems).map((key) => {
+                  if (cartItems[key] > 0) {
+                    const parts = key.split('_note_');
+                    const itemId = parts[0];
+                    const note = parts.length > 1 ? parts[1] : "";
+                    const item = food_list.find((f) => f._id === itemId);
+
+                    if (item) {
+                      return (
+                        <div key={key} className="place-order-item">
+                          <img src={url + "/images/" + item.image} alt={item.name} />
+                          <div className="place-order-item-info">
+                            <p className="place-order-item-name">
+                              {item.name} {note && <span className="text-gray-500 text-sm">({note})</span>}
+                            </p>
+                            <p className="place-order-item-qty">
+                              {cartItems[key]} x {item.price.toLocaleString('vi-VN')} đ
+                            </p>
+                          </div>
+                          <p className="place-order-item-price">
+                            {(item.price * cartItems[key]).toLocaleString('vi-VN')} đ
                           </p>
                         </div>
-                        <p className="place-order-item-price">
-                          {(item.price * cartItems[item._id]).toLocaleString('vi-VN')} đ
-                        </p>
-                      </div>
-                    )
+                      );
+                    }
                   }
+                  return null;
                 })}
               </div>
             </div>

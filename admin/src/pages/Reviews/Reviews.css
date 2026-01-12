@@ -1,0 +1,481 @@
+/* Reviews Admin Page Styles */
+.reviews-admin {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.reviews-header {
+  margin-bottom: 2rem;
+}
+
+.reviews-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.25rem;
+}
+
+.reviews-subtitle {
+  color: #6B7280;
+  font-size: 0.95rem;
+}
+
+/* Loading & Empty States */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.empty-state svg {
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #9CA3AF;
+}
+
+/* Table Styles */
+.reviews-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.reviews-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.reviews-table th,
+.reviews-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.reviews-table th {
+  background: #F9FAFB;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reviews-table tbody tr:hover {
+  background: #FAFAFA;
+}
+
+.date-cell {
+  font-size: 0.85rem;
+  color: #6B7280;
+  white-space: nowrap;
+}
+
+.customer-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.customer-cell svg {
+  color: #9CA3AF;
+}
+
+.rating-cell .stars-row {
+  display: flex;
+  gap: 2px;
+}
+
+.star-filled {
+  color: #FBBF24;
+}
+
+.star-empty {
+  color: #D1D5DB;
+}
+
+.comment-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-comment {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+/* Trace Button */
+.trace-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #EFF6FF;
+  color: #3B82F6;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.trace-btn:hover {
+  background: #DBEAFE;
+}
+
+/* Trace Modal */
+.trace-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.trace-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.trace-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.trace-modal-close:hover {
+  background: #E5E7EB;
+}
+
+.trace-modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #F3F4F6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trace-modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.trace-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-value {
+  font-weight: 700;
+  color: #FBBF24;
+}
+
+.trace-modal-body {
+  padding: 1.5rem;
+}
+
+.trace-section {
+  margin-bottom: 1.5rem;
+}
+
+.trace-section:last-child {
+  margin-bottom: 0;
+}
+
+.trace-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.trace-info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.trace-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.trace-info-item .label {
+  color: #6B7280;
+  min-width: 50px;
+}
+
+.trace-info-item .value {
+  font-weight: 500;
+  color: #1F2937;
+}
+
+.trace-info-item svg {
+  color: #9CA3AF;
+}
+
+/* Location Section */
+.trace-location {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.table-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.floor-info {
+  font-weight: 400;
+  color: #B45309;
+}
+
+.delivery-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #DCFCE7;
+  color: #166534;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.branch-info {
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+/* Order Items */
+.order-items-list {
+  background: #F9FAFB;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.order-item-row {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.order-item-row:last-child {
+  border-bottom: none;
+}
+
+.order-item-row .item-qty {
+  width: 40px;
+  font-weight: 700;
+  color: #F97316;
+}
+
+.order-item-row .item-name {
+  flex: 1;
+  color: #374151;
+}
+
+.order-item-row .item-price {
+  font-weight: 500;
+  color: #1F2937;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #E5E7EB;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+/* Full Comment */
+.full-comment {
+  background: #F9FAFB;
+  padding: 1rem;
+  border-radius: 8px;
+  color: #374151;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reviews-admin {
+    padding: 1rem;
+  }
+
+  .reviews-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .trace-modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 85vh;
+  }
+}
+
+/* Reply Status Badges */
+.reply-status-cell {
+  white-space: nowrap;
+}
+
+.replied-badge {
+  background: #DCFCE7;
+  color: #166534;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pending-reply {
+  color: #9CA3AF;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Reply Section in Modal */
+.reply-section {
+  background: #F0FDF4;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.reply-section h4 {
+  color: #166534;
+  border-bottom-color: #BBF7D0;
+}
+
+.existing-reply {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #22C55E;
+}
+
+.existing-reply .reply-text {
+  color: #166534;
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+}
+
+.existing-reply .reply-date {
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+/* Reply Form */
+.reply-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #BBF7D0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.reply-form textarea:focus {
+  outline: none;
+  border-color: #22C55E;
+}
+
+.reply-form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.reply-form-actions .char-count {
+  font-size: 0.8rem;
+  color: #9CA3AF;
+}
+
+.reply-submit-btn {
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #22C55E, #16A34A);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reply-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.reply-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

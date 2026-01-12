@@ -3,12 +3,22 @@ import "./FoodDetailPopup.css";
 import { assets } from "../../assets/frontend_assets/assets";
 import { StoreContext } from "../../context/StoreContext";
 
+import ReviewSection from "../Review/ReviewSection";
+
 const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }) => {
   const { url, cartItems, addToCart, removeFromCart } = useContext(StoreContext);
   
+  // Note State
+  const [note, setNote] = React.useState("");
+  
+  const currentKey = note ? `${id}_note_${note}` : id;
+  const currentQuantity = cartItems[currentKey] || 0;
+  
   const isOutOfStock = (stock || 100) <= 0;
-  const isMaxStock = (cartItems[id] || 0) >= (stock || 100);
-  const currentQuantity = cartItems[id] || 0;
+  
+  // Calculate total stuck used across all variants
+  const totalStockUsed = Object.keys(cartItems).reduce((sum, k) => k.split('_note_')[0] === id ? sum + cartItems[k] : sum, 0);
+  const isMaxStock = totalStockUsed >= (stock || 100);
 
   useEffect(() => {
     // Lock body scroll when popup is open
@@ -21,6 +31,12 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
       document.documentElement.style.overflow = '';
     };
   }, []);
+
+  const handleAddToCart = () => {
+      addToCart(id, note);
+      setNote(""); // Reset note
+      // optionally onClose()
+  };
 
   return (
     <div className="food-detail-popup" onClick={onClose}>
@@ -53,7 +69,7 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
                               <div key={index} className="desc-list-item">
                                   <span className="desc-bullet"></span>
                                   <span>{trimmed.substring(1).trim()}</span>
-                              </div>
+                                </div>
                           );
                       }
                       return <p key={index} className="desc-text">{trimmed}</p>;
@@ -61,14 +77,28 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
               </div>
           </div>
 
+          {/* NOTE INPUT SECTION */}
+          <div className="food-detail-note-section">
+              <label>Ghi chú món ăn</label>
+              <textarea 
+                  className="food-detail-note-input"
+                  placeholder="VD: Không hành, ít cay..."
+                  maxLength={200}
+                  rows={2}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+              />
+              <span className="note-char-count">{note.length}/200</span>
+          </div>
+
           <p className="food-detail-price">{price.toLocaleString('vi-VN')} đ</p>
           
           {!isOutOfStock && (
             <div className="food-detail-quantity-selector">
-              {currentQuantity === 0 ? (
-                <button
+              {currentQuantity === 0 && !note ? ( 
+                 <button
                   className="food-detail-add-btn"
-                  onClick={() => addToCart(id)}
+                  onClick={handleAddToCart}
                 >
                   Thêm vào giỏ
                 </button>
@@ -76,7 +106,7 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
                 <div className="food-detail-quantity-controls">
                   <button
                     className="quantity-btn quantity-btn-minus"
-                    onClick={() => removeFromCart(id)}
+                    onClick={() => removeFromCart(currentKey)} 
                     aria-label="Giảm số lượng"
                   >
                     −
@@ -84,7 +114,7 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
                   <span className="quantity-value">{currentQuantity}</span>
                   <button
                     className="quantity-btn quantity-btn-plus"
-                    onClick={() => !isMaxStock && addToCart(id)}
+                    onClick={() => addToCart(id, note)}
                     disabled={isMaxStock}
                     aria-label="Tăng số lượng"
                   >
@@ -100,6 +130,10 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
               <p>Hết hàng</p>
             </div>
           )}
+
+          {/* PRODUCT REVIEW SECTION */}
+          <ReviewSection foodId={id} />
+
         </div>
       </div>
     </div>

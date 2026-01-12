@@ -2,6 +2,7 @@ import foodModel from "../models/foodModel.js";
 import categoryModel from "../models/categoryModel.js";
 import userModel from "../models/userModel.js";
 import fs from "fs";
+import { io } from "../server.js";
 
 // add food items
 const addFood = async (req, res) => {
@@ -34,9 +35,11 @@ const addFood = async (req, res) => {
       category: category._id,
       image: image_filename,
       stock: req.body.stock || 100,
+      originalPrice: req.body.originalPrice || 0,
     });
 
     await food.save();
+    if (io) io.emit("food:list_updated", { type: "ADD" });
     res.json({ success: true, message: "Food Added" });
   } catch (error) {
     console.log(error);
@@ -60,7 +63,10 @@ const listFood = async (req, res) => {
       category: food.category ? food.category.name : "Uncategorized",
       isAvailable: food.isAvailable,
       stock: food.stock,
-      trackStock: food.trackStock
+      trackStock: food.trackStock,
+      trackStock: food.trackStock,
+      costPrice: food.costPrice || 0,
+      originalPrice: food.originalPrice || 0,
     }));
     
     res.json({ success: true, data: flattenedFoods });
@@ -80,6 +86,7 @@ const removeFood = async (req, res) => {
 
     const food = await foodModel.findByIdAndUpdate(req.body.id, { isDeleted: true });
     if (food) {
+        if (io) io.emit("food:list_updated", { type: "REMOVE", id: req.body.id });
         // Do not unlink file yet
       res.json({ success: true, message: "Food moved to Trash" });
     } else {
@@ -124,6 +131,7 @@ const restoreFood = async (req, res) => {
     }
     const food = await foodModel.findByIdAndUpdate(req.body.id, { isDeleted: false });
     if(food) {
+        if (io) io.emit("food:list_updated", { type: "RESTORE", id: req.body.id });
         res.json({ success: true, message: "Food Restored" });
     } else {
         res.json({ success: false, message: "Food not found" });
@@ -196,7 +204,9 @@ const updateFood = async (req, res) => {
         name,
         description,
         price,
-        stock
+        price,
+        stock,
+        originalPrice: req.body.originalPrice || 0
     };
     
     if (categoryId) {
@@ -213,6 +223,7 @@ const updateFood = async (req, res) => {
     }
 
     await foodModel.findByIdAndUpdate(id, updateData);
+    if (io) io.emit("food:list_updated", { type: "UPDATE", id: id });
     res.json({ success: true, message: "Food Updated" });
   } catch (error) {
     console.log(error);
@@ -231,4 +242,57 @@ const listCategories = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood };
+// Search Food (Text Search + Regex Fallback)
+const searchFood = async (req, res) => {
+  try {
+    const { keyword } = req.query;
+    // Default Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100; // Default limit
+    const skip = (page - 1) * limit;
+
+    let query = { isDeleted: { $ne: true } };
+    let sort = {};
+    let projection = {};
+
+    if (keyword) {
+      if (keyword.length < 2) {
+        // Fallback to Regex for short queries (e.g. "A")
+        query.name = { $regex: keyword, $options: "i" };
+      } else {
+        // Full Text Search
+        query.$text = { $search: keyword };
+        projection = { score: { $meta: "textScore" } };
+        sort = { score: { $meta: "textScore" } };
+      }
+    }
+
+    const foods = await foodModel.find(query, projection)
+      .populate("category")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    // Flatten for consistent frontend structure
+    const flattenedFoods = foods.map(food => ({
+      _id: food._id,
+      name: food.name,
+      description: food.description,
+      price: food.price,
+      image: food.image,
+      category: food.category ? food.category.name : "Uncategorized",
+      isAvailable: food.isAvailable,
+      stock: food.stock,
+      trackStock: food.trackStock,
+      costPrice: food.costPrice || 0,
+      originalPrice: food.originalPrice || 0,
+    }));
+
+    res.json({ success: true, data: flattenedFoods, count: flattenedFoods.length });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error searching food" });
+  }
+};
+
+export { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood };

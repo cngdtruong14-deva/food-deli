@@ -361,69 +361,24 @@
     }
 }
 
-/* Mobile Menu Toggle */
-.mobile-menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: var(--color-text);
-    transition: all var(--transition-base);
-    z-index: 1001;
+/* ========== DESKTOP-ONLY VISIBILITY ========== */
+.desktop-only {
+    display: flex;
+    align-items: center;
 }
 
-.mobile-menu-toggle:hover {
-    color: var(--color-accent);
-}
-
-.mobile-menu-toggle svg {
-    width: 24px;
-    height: 24px;
+/* ========== MOBILE BOTTOM NAVIGATION BAR ========== */
+.mobile-bottom-nav {
+    display: none; /* Hidden on desktop */
 }
 
 @media (max-width: 750px) {
-    .mobile-menu-toggle {
-        display: block;
-        color: white;
+    /* Hide desktop-only elements on mobile */
+    .desktop-only {
+        display: none !important;
     }
     
-    .navbar-menu {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: linear-gradient(135deg, #0F5132 0%, #1a5f3f 100%);
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2rem;
-        padding: 2rem;
-        z-index: 1001;
-        transform: translateX(-100%);
-        transition: transform var(--transition-base);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        margin: 0;
-    }
-    
-    .navbar-menu.mobile-open {
-        transform: translateX(0);
-    }
-    
-    .navbar-menu a {
-        font-size: 1.25rem;
-        padding: 1rem 0;
-        width: 100%;
-        text-align: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-    
-    .navbar-menu a::after {
-        display: none;
-    }
-    
+    /* Simplified top navbar for mobile */
     .navbar {
         padding: 0.75rem 1rem;
         width: 100%;
@@ -439,32 +394,115 @@
         font-size: 1.25rem;
     }
     
+    .navbar-hotline {
+        display: none;
+    }
+    
     .navbar-right {
         gap: 0.75rem;
     }
     
-    .navbar-right img {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .navbar-book-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-    }
-    
-    .navbar-search-input-container {
-        position: absolute;
-        top: 100%;
+    /* ========== BOTTOM NAVIGATION BAR (GrabFood Style) ========== */
+    .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
         left: 0;
         right: 0;
-        margin: 0.5rem 1rem;
-        width: calc(100% - 2rem);
-        z-index: 1001;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.95);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        z-index: 1000;
+        padding: 8px 0;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        justify-content: space-around;
+        align-items: center;
     }
     
-    .navbar-search-input-container input {
-        width: 100%;
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #6B7280;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .bottom-nav-item svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 1.8;
+        transition: all 0.2s ease;
+    }
+    
+    .bottom-nav-item span {
+        font-size: 11px;
+        font-weight: 500;
+        font-family: var(--font-body);
+        transition: all 0.2s ease;
+    }
+    
+    /* Active State - Orange highlight */
+    .bottom-nav-item.active {
+        color: #FF6B00;
+    }
+    
+    .bottom-nav-item.active svg {
+        stroke: #FF6B00;
+        transform: scale(1.1);
+    }
+    
+    .bottom-nav-item.active span {
+        font-weight: 600;
+        color: #FF6B00;
+    }
+    
+    /* Hover/Touch feedback */
+    .bottom-nav-item:active {
+        background: rgba(255, 107, 0, 0.1);
+        transform: scale(0.95);
+    }
+    
+    /* Cart Icon with Badge */
+    .cart-icon-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .cart-badge {
+        position: absolute;
+        top: -6px;
+        right: -10px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        background: linear-gradient(135deg, #FF6B00 0%, #F97316 100%);
+        border-radius: 9px;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(255, 107, 0, 0.4);
+        animation: badgePop 0.3s ease;
+    }
+    
+    @keyframes badgePop {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
     }
 }
 
@@ -484,27 +522,21 @@
         font-size: 1.125rem;
     }
     
-    .navbar-right {
-        gap: 0.5rem;
+    .mobile-bottom-nav {
+        height: 65px;
     }
     
-    .navbar-right img {
-        width: 18px;
-        height: 18px;
+    .bottom-nav-item {
+        padding: 6px 12px;
     }
     
-    .navbar-book-btn {
-        padding: 0.5rem 0.875rem;
-        font-size: 0.6875rem;
-    }
-    
-    .mobile-menu-toggle {
-        padding: 0.375rem;
-    }
-    
-    .mobile-menu-toggle svg {
+    .bottom-nav-item svg {
         width: 22px;
         height: 22px;
+    }
+    
+    .bottom-nav-item span {
+        font-size: 10px;
     }
 }
 
@@ -513,13 +545,24 @@
         padding: 0.5rem 0.75rem;
     }
     
-    .navbar .logo {
-        font-size: 1.5rem;
+    .logo-text {
+        font-size: 1rem;
     }
     
-    .navbar button {
-        padding: 0.4375rem 0.75rem;
-        font-size: 0.6875rem;
+    .mobile-bottom-nav {
+        height: 60px;
     }
-}
+    
+    .bottom-nav-item {
+        padding: 4px 8px;
+    }
+    
+    .bottom-nav-item svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .bottom-nav-item span {
+        font-size: 9px;
+    }
 }

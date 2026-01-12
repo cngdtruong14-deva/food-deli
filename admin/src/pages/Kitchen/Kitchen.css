@@ -1,0 +1,214 @@
+.kitchen-board {
+    padding: 20px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1a1a; /* Dark Mode for Kitchen */
+    color: #fff;
+    overflow: hidden;
+}
+
+.kitchen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background: #333;
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+
+.kitchen-header h2 {
+    margin: 0;
+    color: #fff;
+}
+
+.kitchen-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.kitchen-tabs button {
+    padding: 10px 20px;
+    border: none;
+    background: #444;
+    color: #888;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.kitchen-tabs button.active {
+    background: #ff6347; /* Tomato Red */
+    color: white;
+    transform: scale(1.05);
+}
+
+.test-sound-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #888;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* GRID LAYOUT */
+.kitchen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+    height: 100%;
+}
+
+/* CARD DESIGN */
+.kitchen-card {
+    background: #252525;
+    border-left: 5px solid #444;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+}
+
+.kitchen-card.late {
+    border-left-color: #ff4d4d;
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #333;
+    border-top-right-radius: 8px;
+}
+
+.table-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.timer {
+    font-family: monospace;
+    font-size: 18px;
+    color: #aaa;
+}
+
+.kitchen-card.late .timer {
+    color: #ff4d4d;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+.card-body {
+    padding: 15px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.order-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #444;
+}
+
+.item-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qty {
+    background: #444;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.name {
+    font-size: 1.1em;
+}
+
+/* Highlight Note */
+.item-note {
+    margin-top: 5px;
+    margin-left: 40px;
+    background: #ffd700; /* Gold */
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.card-actions {
+    padding: 15px;
+    background: #333;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.start-btn {
+    background: #3b82f6; /* Blue */
+    color: white;
+}
+
+.done-btn {
+    background: #10b981; /* Green */
+    color: white;
+}
+
+.undo-btn {
+    background: #6b7280;
+    color: white;
+}
+
+.icon-btn {
+    background: #555;
+    border: none;
+    color: white;
+    width: 44px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.no-orders {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #666;
+    font-size: 24px;
+    margin-top: 50px;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

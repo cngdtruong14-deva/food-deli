@@ -1,17 +1,96 @@
+import mongoose from "mongoose";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import foodModel from "../models/foodModel.js";
 import tableModel from "../models/tableModel.js";
+import recipeModel from "../models/recipeModel.js";
+import ingredientModel from "../models/ingredientModel.js";
+import stockModel from "../models/stockModel.js";
 import Stripe from "stripe";
 import { io } from "../server.js";
 import fs from 'fs'; // Added for debug log
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// ============ SMART INVENTORY: Auto Stock Deduction ============
+// Deduct ingredient stock when order is completed (Served/Delivered)
+const deductInventoryForOrder = async (orderId) => {
+  try {
+    const order = await orderModel.findById(orderId);
+    if (!order || !order.items || order.items.length === 0) {
+      console.log(`[Inventory] No items found for order ${orderId}`);
+      return;
+    }
+
+    // Determine Branch (Handle null for Central)
+    const branchId = order.branchId || null;
+    console.log(`[Inventory] Processing stock deduction for order ${orderId} at Branch: ${branchId || 'Central'}`);
+    
+    for (const item of order.items) {
+      // Find recipe for this food item
+      const recipe = await recipeModel.findOne({ foodId: item._id });
+      
+      if (!recipe) {
+        console.log(`[Inventory] No recipe found for ${item.name}, skipping`);
+        continue;
+      }
+
+      // Deduct each ingredient
+      for (const ing of recipe.ingredients) {
+        const deductAmount = ing.quantityNeeded * item.quantity;
+        
+        // Update STOCK model for specific branch
+        const updatedStock = await stockModel.findOneAndUpdate(
+          { ingredient: ing.ingredientId, branch: branchId },
+          { 
+            $inc: { quantity: -deductAmount },
+            $set: { lastUpdated: new Date() }
+          },
+          { new: true }
+        );
+
+        if (updatedStock) {
+           // Fetch ingredient name for logging
+           const ingredientInfo = await ingredientModel.findById(ing.ingredientId);
+           const name = ingredientInfo ? ingredientInfo.name : "Unknown Ingredient";
+
+           console.log(`[Inventory] Deducted ${deductAmount} ${ing.unit} from ${name} at ${branchId || 'Central'}. New qty: ${updatedStock.quantity}`);
+          
+          // Warning if stock goes negative or below minimum
+          if (updatedStock.quantity < 0) {
+            console.warn(`[Inventory] WARNING: ${name} has NEGATIVE stock: ${updatedStock.quantity}`);
+          } else if (updatedStock.quantity < updatedStock.minThreshold) {
+            console.warn(`[Inventory] LOW STOCK: ${name} is below minimum (${updatedStock.quantity}/${updatedStock.minThreshold})`);
+            if (io) {
+                io.emit("stock:alert", {
+                    type: "LOW_STOCK",
+                    ingredient: name,
+                    quantity: updatedStock.quantity,
+                    threshold: updatedStock.minThreshold,
+                    branchId: branchId
+                });
+            }
+          }
+        } else {
+            console.warn(`[Inventory] Stock entry not found for ingredient ${ing.ingredientId} at branch ${branchId}`);
+        }
+      }
+    }
+
+    console.log(`[Inventory] Stock deduction completed for order ${orderId}`);
+  } catch (error) {
+    console.error(`[Inventory] Error deducting stock for order ${orderId}:`, error);
+  }
+};
+
 // placing user order for frontend
 const placeOrder = async (req, res) => {
   const frontend_url = process.env.FRONTEND_URL || "http://localhost:5173";
+  const session = await mongoose.startSession();
+  
   try {
+    session.startTransaction();
+    
     const orderType = req.body.orderType || "Delivery";
     const paymentMethod = req.body.paymentMethod || "Stripe";
     const guestId = req.body.guestId || null;
@@ -27,8 +106,9 @@ const placeOrder = async (req, res) => {
     const outOfStockItems = [];
     
     for (const item of items) {
-      const food = await foodModel.findById(item._id);
+      const food = await foodModel.findById(item._id).session(session);
       if (!food) {
+          await session.abortTransaction();
           return res.json({ success: false, message: `Item not found: ${item.name}` });
       }
       
@@ -45,40 +125,69 @@ const placeOrder = async (req, res) => {
           price: food.price,
           name: food.name
       });
-      calculatedAmount += food.price * item.quantity;
+      // HIGH PRIORITY FIX: Use integer math for VND (no decimals)
+      // Round each item total to avoid floating point errors
+      const itemTotal = Math.round(food.price * item.quantity);
+      calculatedAmount += itemTotal;
     }
 
-    if (outOfStockItems.length > 0) {
-      return res.json({
-        success: false,
-        message: "Some items are out of stock",
-        outOfStockItems
-      });
-    }
+    // RELAXED LOGIC: Removed Strict Stock Validation (Allow Negative)
+     /* 
+     if (outOfStockItems.length > 0) {
+       await session.abortTransaction();
+       return res.json({ ... });
+     }
+     */
 
-    // Deduct stock
-    for (const item of items) {
-      await foodModel.findByIdAndUpdate(
-        item._id,
-        { $inc: { stock: -item.quantity } },
-        { new: true }
-      );
+    // CRITICAL FIX: ATOMIC STOCK DEDUCTION (ALLOW NEGATIVE)
+    const deductedItems = [];
+    
+    try {
+        for (const item of items) {
+            // Updated: Removed { stock: { $gte: item.quantity } } requirement
+            // Now allows stock to go negative (Soft Deduction)
+            const food = await foodModel.findOneAndUpdate(
+                { _id: item._id },
+                { $inc: { stock: -item.quantity }, $set: { lastUpdated: new Date() } },
+                { new: true, session } // Add session for transaction
+            );
+
+            // Note: If food item doesn't exist, it returns null
+            if (!food) {
+                 // Logic to handle deleting item or ignore? 
+                 // If item passed verification earlier, it exists.
+                 // But strictly speaking:
+                 throw new Error(`Item not found during deduction: ${item.name}`);
+            }
+            deductedItems.push(item);
+        }
+    } catch (error) {
+        await session.abortTransaction();
+        console.error("Stock deduction failed, transaction aborted:", error.message);
+        return res.json({ 
+            success: false, 
+            message: "Purchase failed: Not enough stock for some items. Please try again." 
+        });
     }
     
-    // IMMEDIATE TABLE STATUS UPDATE (Fix for lag)
+    // IMMEDIATE TABLE STATUS UPDATE (within transaction)
     if (isDineIn && req.body.tableId) {
-      await tableModel.findByIdAndUpdate(req.body.tableId, { status: "Occupied" });
-      // Emit socket event if needed, but tableController usually watches DB or logic elsewhere
-      if (io) {
-         io.emit("table:status_updated", { tableId: req.body.tableId, branchId: req.body.branchId, status: "Occupied" });
-      }
+      await tableModel.findByIdAndUpdate(
+        req.body.tableId, 
+        { status: "Occupied" },
+        { session }
+      );
     }
 
+    // HIGH PRIORITY FIX: Round final amount to avoid floating point errors
+    const deliveryFee = isDineIn ? 0 : 15000;
+    const finalAmount = Math.round(calculatedAmount + deliveryFee);
+    
     const newOrder = new orderModel({
       userId: req.body.userId, // Null if guest
       guestId: guestId,        // Unique Guest ID
       items: verifiedItems,
-      amount: calculatedAmount + (isDineIn ? 0 : 15000),
+      amount: finalAmount,
       address: req.body.address || {},
       orderType: orderType,
       paymentMethod: paymentMethod,
@@ -87,8 +196,38 @@ const placeOrder = async (req, res) => {
       payment: false,
     });
     
-    await newOrder.save();
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+    await newOrder.save({ session });
+    
+    // Clear cart (within transaction)
+    if (req.body.userId) {
+      await userModel.findByIdAndUpdate(
+        req.body.userId, 
+        { cartData: {} },
+        { session }
+      );
+    }
+    
+    // Commit transaction - All operations succeed or all fail
+    await session.commitTransaction();
+    
+    // Emit Stock Update Event to all clients (AFTER successful commit)
+    // Note: Stock updates are not handled by Change Streams, so always emit
+    if (io) {
+        const stockUpdates = items.map(item => ({
+            id: item._id,
+            change: -item.quantity 
+        }));
+        io.emit("food:stock_updated", stockUpdates);
+    }
+    
+    // Emit table status update (AFTER successful commit)
+    if (isDineIn && req.body.tableId && io) {
+      io.emit("table:status_updated", { 
+        tableId: req.body.tableId, 
+        branchId: req.body.branchId, 
+        status: "Occupied" 
+      });
+    }
 
     // Handle Cash Payment (Skip Stripe) - e.g. Dine-in or COD
     if (isCOD) {
@@ -135,17 +274,24 @@ const placeOrder = async (req, res) => {
        });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const stripeSession = await stripe.checkout.sessions.create({
       line_items: line_items,
       mode: "payment",
       success_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}`,
       cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
     });
 
-    res.json({ success: true, session_url: session.url });
+    res.json({ success: true, session_url: stripeSession.url });
   } catch (error) {
-    console.log("ORDER ERROR:", error);
+    // CRITICAL FIX: Abort transaction on any error
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    console.error("ORDER ERROR:", error);
     res.json({ success: false, message: "Error placing order: " + error.message });
+  } finally {
+    // Always end session
+    await session.endSession();
   }
 };
 
@@ -167,11 +313,17 @@ const verifyOrder = async (req, res) => {
       const order = await orderModel.findById(orderId);
       if (order) {
         // Restore Stock
+        const stockUpdates = [];
         for (const item of order.items) {
           await foodModel.findByIdAndUpdate(
             item._id,
             { $inc: { stock: item.quantity } }
           );
+          stockUpdates.push({ id: item._id, change: item.quantity });
+        }
+        
+        if (io && stockUpdates.length > 0) {
+            io.emit("food:stock_updated", stockUpdates);
         }
         
         // Free Table (Immediately available if payment failed/cancelled)
@@ -297,25 +449,61 @@ const updateStatus = async (req, res) => {
              io.emit("table:status_updated", { tableId: updatedOrder.tableId, branchId: updatedOrder.branchId, status: "Available" });
           }
       }
+      
+      // RESTORE FOOD STOCK ON CANCELLATION (Fix for Real-time Logic)
+      if (status === "Cancelled" && updatedOrder) {
+          const stockUpdates = [];
+          for (const item of updatedOrder.items) {
+             // Only restore if it was a tracked item (though placeOrder checked it, safe to inc)
+             await foodModel.findByIdAndUpdate(
+                item._id, 
+                { $inc: { stock: item.quantity } }
+             );
+             stockUpdates.push({ id: item._id, change: item.quantity });
+          }
+          
+          if (io && stockUpdates.length > 0) {
+              console.log("[Socket] Emitting Stock Restore on Cancel:", stockUpdates);
+              io.emit("food:stock_updated", stockUpdates);
+          }
+      }
+
+      // ============ SMART INVENTORY: Auto Stock Deduction ============
+      // Trigger stock deduction when order is completed (Served for Dine-in, Delivered for Delivery)
+      if (status === "Served" || status === "Delivered") {
+        await deductInventoryForOrder(orderId);
+      }
 
       // Emit real-time event for status update
-      if (io && updatedOrder) {
-        io.to(`user_${updatedOrder.userId}`).emit("order:status_updated", {
-          orderId: updatedOrder._id,
-          status: updatedOrder.status,
-        });
+      // CRITICAL FIX: Only emit if Change Streams are NOT active (prevent double emission)
+      if (io && updatedOrder && !global.CHANGE_STREAMS_ACTIVE) {
+        // Populate order for consistent payload format
+        // Note: userId is String, not ObjectId ref, so we can't populate it
+        const populatedOrder = await orderModel.findById(updatedOrder._id)
+          .populate('branchId', 'name')
+          .populate('tableId', 'tableNumber floor');
         
-        if (updatedOrder.branchId) {
-          io.to(`branch_${updatedOrder.branchId}`).emit("order:status_updated", {
-            orderId: updatedOrder._id,
-            status: updatedOrder.status,
-          });
+        // Standardized payload format (matches Change Stream format)
+        const payload = {
+          orderId: populatedOrder._id,
+          order: populatedOrder, // Full object for consistency
+          status: populatedOrder.status,
+          timestamp: new Date()
+        };
+        
+        // userId is String, not ObjectId
+        if (populatedOrder.userId) {
+          const userId = populatedOrder.userId.toString();
+          io.to(`user_${userId}`).emit("order:status_updated", payload);
         }
         
-        io.emit("order:status_updated", {
-          orderId: updatedOrder._id,
-          status: updatedOrder.status,
-        });
+        if (populatedOrder.branchId) {
+          const branchId = populatedOrder.branchId._id?.toString() || populatedOrder.branchId.toString();
+          io.to(`branch_${branchId}`).emit("order:status_updated", payload);
+        }
+        
+        // Notify Admins
+        io.to('admin_notifications').emit("order:status_updated", payload);
       }
 
       res.json({ success: true, message: "Status Updated Successfully" });

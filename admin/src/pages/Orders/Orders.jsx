@@ -118,6 +118,14 @@ const Orders = ({ url }) => {
       if (response.data.success) {
         toast.success(response.data.message);
         setShowCancelModal(false);
+        
+        // Optimistic Update: Update UI immediately
+        setOrders((prev) => prev.map((o) => {
+            if (o._id === orderId) {
+                return { ...o, status: status };
+            }
+            return o;
+        }));
       } else {
         toast.error(response.data.message);
       }
@@ -341,6 +349,19 @@ const Orders = ({ url }) => {
              <h2>Quản Lý Đơn Hàng</h2>
              <p className="oms-subtitle">Theo dõi và xử lý đơn hàng tập trung</p>
          </div>
+         
+         {/* Sound Enabler for Browser Policy */}
+         <button 
+            className="oms-btn" 
+            onClick={() => {
+                const audio = new Audio("https://cdn.freesound.org/previews/533/533869_5828667-lq.mp3");
+                audio.play().then(() => toast.success("Âm thanh đã được bật! 🔔")).catch(() => toast.error("Trình duyệt chặn âm thanh. Hãy click lại!"));
+            }}
+            style={{background: 'white', border: '1px solid #ddd', color: '#555'}}
+            title="Bật âm thanh thông báo"
+         >
+             🔔 Test Loa
+         </button>
          
          <div className="oms-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             {/* Cleanup Debug Button */}

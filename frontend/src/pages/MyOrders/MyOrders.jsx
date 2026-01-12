@@ -1,14 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./MyOrders.css";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
-import { assets } from "../../assets/frontend_assets/assets";
+import ReviewModal from "../../components/ReviewModal/ReviewModal";
 
 const MyOrders = () => {
   const { url, token, addToCart, guestId } = useContext(StoreContext);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("active"); // "active" | "history"
+  
+  // Review Modal State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [reviewedOrders, setReviewedOrders] = useState(new Set());
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -188,11 +193,25 @@ const MyOrders = () => {
         <div className="card-footer-smart">
             {isHistory ? (
                 <>
-                   <button className="smart-btn outline" onClick={() => handleReorder(order)}>🔄 Đặt lại đơn này</button>
-                   <span className="history-label">{order.status === "Paid" ? "Hoàn thành" : "Đã hủy"}</span>
+                   <button className="smart-btn outline" onClick={() => handleReorder(order)}>🔄 Đặt lại</button>
+                   {/* Rate Order Button - Only for completed orders not yet reviewed */}
+                   {["Delivered", "Served", "Paid"].includes(order.status) && !reviewedOrders.has(order._id) && (
+                     <button 
+                       className="smart-btn review-btn" 
+                       onClick={() => {
+                         setSelectedOrderId(order._id);
+                         setReviewModalOpen(true);
+                       }}
+                     >
+                       ⭐ Đánh giá
+                     </button>
+                   )}
+                   {reviewedOrders.has(order._id) && (
+                     <span className="reviewed-badge">✓ Đã đánh giá</span>
+                   )}
                 </>
             ) : (
-                 <button className="smart-btn primary" onClick={fetchOrders}>Cập nhật trạng thái</button>
+                 <button className="smart-btn primary" onClick={fetchOrders}>Cập nhật</button>
             )}
         </div>
       </div>
@@ -200,6 +219,7 @@ const MyOrders = () => {
   };
 
   return (
+    <>
     <div className="my-orders-smart">
        <div className="smart-container">
            <div className="smart-header">
@@ -256,6 +276,23 @@ const MyOrders = () => {
            </div>
        </div>
     </div>
+    
+    {/* Review Modal */}
+    <ReviewModal
+      isOpen={reviewModalOpen}
+      onClose={() => {
+        setReviewModalOpen(false);
+        setSelectedOrderId(null);
+      }}
+      orderId={selectedOrderId}
+      url={url}
+      token={token}
+      onSuccess={() => {
+        // Mark order as reviewed locally
+        setReviewedOrders(prev => new Set([...prev, selectedOrderId]));
+      }}
+    />
+  </>
   );
 };
 

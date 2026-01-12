@@ -346,3 +346,30 @@
   .smart-tabs { justify-content: flex-start; overflow-x: auto; padding-left: 1rem; }
   .smart-tab { white-space: nowrap; }
 }
+
+/* Review Button Styles */
+.smart-btn.review-btn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.smart-btn.review-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.reviewed-badge {
+  font-size: 0.85rem;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.card-footer-smart {
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

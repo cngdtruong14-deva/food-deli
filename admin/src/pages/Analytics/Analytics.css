@@ -1,0 +1,299 @@
+/* ========================================
+   ANALYTICS PAGE STYLES
+   ======================================== */
+
+.analytics-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.analytics-header {
+    margin-bottom: 1.5rem;
+}
+
+.analytics-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.75rem;
+    color: #1F2937;
+    margin-bottom: 0.5rem;
+}
+
+.analytics-header h1 svg {
+    color: #6366F1;
+}
+
+.analytics-header p {
+    color: #6B7280;
+    font-size: 0.95rem;
+}
+
+/* Filter Bar */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-group svg {
+    color: #6B7280;
+}
+
+.filter-group select {
+    padding: 0.625rem 1rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.custom-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.custom-range input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.custom-range span {
+    color: #6B7280;
+}
+
+/* KPI Cards */
+.kpi-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.25rem;
+}
+
+.kpi-card.revenue .kpi-icon { background: #DBEAFE; color: #2563EB; }
+.kpi-card.profit .kpi-icon { background: #D1FAE5; color: #059669; }
+.kpi-card.food-cost .kpi-icon { background: #FEF3C7; color: #D97706; }
+.kpi-card.orders .kpi-icon { background: #E0E7FF; color: #4F46E5; }
+
+.kpi-card.food-cost.good .kpi-icon { background: #D1FAE5; color: #059669; }
+.kpi-card.food-cost.warning .kpi-icon { background: #FEE2E2; color: #DC2626; }
+
+.kpi-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-label {
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1F2937;
+    line-height: 1.2;
+}
+
+.kpi-card.food-cost.good .kpi-value { color: #059669; }
+.kpi-card.food-cost.warning .kpi-value { color: #DC2626; }
+
+.kpi-detail {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 0.25rem;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    padding: 1.5rem;
+}
+
+.chart-card h3 {
+    font-size: 1rem;
+    color: #374151;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.chart-card.main-chart {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.chart-card.pie-chart {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.chart-card.bar-chart {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.chart-card.waste-card {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.chart-loading,
+.no-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #9CA3AF;
+    font-size: 14px;
+}
+
+/* Custom Tooltip */
+.custom-tooltip {
+    background: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 13px;
+}
+
+.custom-tooltip .tooltip-title {
+    font-weight: 600;
+    color: #1F2937;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 0.5rem;
+}
+
+.custom-tooltip p {
+    margin: 0.25rem 0;
+    color: #6B7280;
+}
+
+.custom-tooltip strong {
+    color: #1F2937;
+}
+
+/* Waste Table */
+.waste-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.waste-table th,
+.waste-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #E5E7EB;
+    font-size: 13px;
+}
+
+.waste-table th {
+    background: #F9FAFB;
+    font-weight: 600;
+    color: #6B7280;
+}
+
+.waste-table .waste-cost {
+    color: #DC2626;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .kpi-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-card.main-chart,
+    .chart-card.pie-chart,
+    .chart-card.bar-chart,
+    .chart-card.waste-card {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-page {
+        padding: 1rem;
+    }
+    
+    .kpi-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-group select {
+        width: 100%;
+    }
+}
+
+/* Recharts Overrides */
+.recharts-legend-item-text {
+    font-size: 12px !important;
+}
