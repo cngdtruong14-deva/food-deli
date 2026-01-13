@@ -195,7 +195,7 @@ const MyOrders = () => {
                 <>
                    <button className="smart-btn outline" onClick={() => handleReorder(order)}>🔄 Đặt lại</button>
                    {/* Rate Order Button - Only for completed orders not yet reviewed */}
-                   {["Delivered", "Served", "Paid"].includes(order.status) && !reviewedOrders.has(order._id) && (
+                   {["Delivered", "Served", "Paid"].includes(order.status) && !order.isReviewed && !reviewedOrders.has(order._id) && (
                      <button 
                        className="smart-btn review-btn" 
                        onClick={() => {
@@ -206,7 +206,7 @@ const MyOrders = () => {
                        ⭐ Đánh giá
                      </button>
                    )}
-                   {reviewedOrders.has(order._id) && (
+                   {(order.isReviewed || reviewedOrders.has(order._id)) && (
                      <span className="reviewed-badge">✓ Đã đánh giá</span>
                    )}
                 </>

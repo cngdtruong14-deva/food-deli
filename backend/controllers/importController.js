@@ -198,12 +198,13 @@ const createReceipt = async (req, res) => {
         res.json({ success: true, message: `Tạo phiếu ${code} thành công`, data: receipt });
     } catch (error) {
         console.error("createReceipt error:", error);
-        res.json({ success: false, message: "Error creating receipt" });
+        res.json({ success: false, message: "Error creating receipt: " + error.message });
     }
 };
 
 // Complete receipt (Update stock, log transaction, update cost)
 const completeReceipt = async (req, res) => {
+    let session = null;
     try {
         const { id } = req.params;
         const { userId } = req.body;
@@ -222,13 +223,36 @@ const completeReceipt = async (req, res) => {
             return res.json({ success: false, message: `Cannot complete receipt with status ${receipt.status}` });
         }
 
+        // Start Transaction
+        try {
+            session = await mongoose.startSession();
+        } catch (err) {
+            console.warn("Failed to start session, proceeding without transaction:", err.message);
+            session = null;
+        }
+
+        let transactionStarted = false;
+        if (session) {
+            try {
+                session.startTransaction();
+                transactionStarted = true;
+            } catch (err) {
+                console.warn("Transactions not supported, proceeding without transaction.");
+                session.endSession();
+                session = null;
+            }
+        }
+
+        const opts = session ? { session } : {};
+
         // Process each item - Update stock and log transaction
         for (const item of receipt.items) {
             // Find or create stock entry
             let stock = await stockModel.findOne({ 
                 ingredient: item.ingredient, 
-                branch: receipt.branch 
-            });
+                // Explicitly handle branch null for Central
+                branch: receipt.branch || null 
+            }).setOptions(opts);
 
             const previousQty = stock ? stock.quantity : 0;
             const newQty = previousQty + item.quantity;
@@ -236,18 +260,23 @@ const completeReceipt = async (req, res) => {
             if (stock) {
                 stock.quantity = newQty;
                 stock.lastUpdated = Date.now();
-                await stock.save();
+                await stock.save(opts);
             } else {
-                stock = await stockModel.create({
+                stock = await stockModel.create([{
                     ingredient: item.ingredient,
-                    branch: receipt.branch,
+                    branch: receipt.branch || null,
                     quantity: newQty,
                     minThreshold: 5
-                });
+                }], session ? { session } : {}); // .create signature differs slightly
+                
+                // If create returned array (due to [...] or session usage), pick first
+                if (Array.isArray(stock)) {
+                    stock = stock[0];
+                }
             }
 
             // Update ingredient cost price (Weighted Average)
-            const ingredient = await ingredientModel.findById(item.ingredient);
+            const ingredient = await ingredientModel.findById(item.ingredient).setOptions(opts);
             if (ingredient) {
                 const oldValue = previousQty * (ingredient.costPrice || 0);
                 const newValue = item.quantity * item.pricePerUnit;
@@ -255,15 +284,15 @@ const completeReceipt = async (req, res) => {
                 
                 if (totalQty > 0) {
                     ingredient.costPrice = Math.round((oldValue + newValue) / totalQty);
-                    await ingredient.save();
+                    await ingredient.save(opts);
                 }
             }
 
             // Log transaction
-            await stockTransactionModel.create({
+            const transactionData = {
                 stock: stock._id,
                 ingredient: item.ingredient,
-                branch: receipt.branch,
+                branch: receipt.branch || null,
                 type: 'IMPORT',
                 quantity: item.quantity,
                 previousQty,
@@ -272,7 +301,13 @@ const completeReceipt = async (req, res) => {
                 referenceId: receipt.code,
                 performedBy: userId,
                 performedByName: name
-            });
+            };
+
+            if (session) {
+                await stockTransactionModel.create([transactionData], { session });
+            } else {
+                await stockTransactionModel.create(transactionData);
+            }
         }
 
         // Update receipt status
@@ -280,7 +315,13 @@ const completeReceipt = async (req, res) => {
         receipt.completedBy = userId;
         receipt.completedByName = name;
         receipt.completedAt = Date.now();
-        await receipt.save();
+        await receipt.save(opts);
+
+        // Commit Transaction
+        if (transactionStarted) {
+            await session.commitTransaction();
+            session.endSession();
+        }
 
         res.json({ 
             success: true, 
@@ -288,8 +329,12 @@ const completeReceipt = async (req, res) => {
             data: receipt
         });
     } catch (error) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
         console.error("completeReceipt error:", error);
-        res.json({ success: false, message: "Error completing receipt" });
+        res.json({ success: false, message: "Error completing receipt: " + error.message });
     }
 };
 

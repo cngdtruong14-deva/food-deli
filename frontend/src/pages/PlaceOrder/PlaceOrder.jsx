@@ -27,6 +27,7 @@ const PlaceOrder = () => {
 
   const [selectedBranch, setSelectedBranch] = useState("");
   const [tables, setTables] = useState([]);
+  const [loadingTables, setLoadingTables] = useState(false);
   const [selectedTable, setSelectedTable] = useState("");
   // Determine if context implies dine-in (scanned QR)
   const isContextDineIn = orderType === "Dine-in";
@@ -167,6 +168,7 @@ const PlaceOrder = () => {
   useEffect(() => {
     if (orderMethod === "dine-in" && !isContextDineIn && selectedBranch) {
       const fetchTables = async () => {
+        setLoadingTables(true);
         try {
           const response = await axios.get(`${url}/api/table/list/${selectedBranch}`);
           if (response.data.success) {
@@ -174,6 +176,8 @@ const PlaceOrder = () => {
           }
         } catch (error) {
           console.error("Error fetching tables:", error);
+        } finally {
+          setLoadingTables(false);
         }
       };
 
@@ -371,7 +375,13 @@ const PlaceOrder = () => {
                       </div>
                     ))
                   ) : (
-                    <p>Đang tải danh sách bàn hoặc chưa có bàn...</p>
+                    <div className="no-tables-message">
+                         {loadingTables ? (
+                             <p>⏳ Đang tải danh sách bàn...</p>
+                         ) : (
+                             <p>⚠️ Chi nhánh này chưa có bàn nào được thiết lập.</p>
+                         )}
+                    </div>
                   )}
                 </div>
                 {!selectedTable && <p className="error-text">Vui lòng chọn bàn trống</p>}

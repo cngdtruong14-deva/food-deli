@@ -6,12 +6,16 @@ import mongoose from "mongoose";
 // Get live status (Active Tables & Kitchen Backlog)
 const getLiveStatus = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const { branchId, userId } = req.query; // Allow passing via query for consistency
+    // Note: userId here is for verifying admin, prefer token context
+    const requesterId = req.user ? req.user.id : (req.body.userId || userId);
+
+    const userData = await userModel.findById(requesterId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    const { branchId } = req.query;
+    // const { branchId } = req.query; // Removed redundant declaration
     
     // 1. Active Tables
     const activeTablesQuery = { status: "Occupied" };
@@ -43,7 +47,8 @@ const getLiveStatus = async (req, res) => {
 // Get Consolidated Dashboard Data
 const getDashboardData = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const requesterId = req.user ? req.user.id : req.body.userId;
+    const userData = await userModel.findById(requesterId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -67,7 +72,7 @@ const getDashboardData = async (req, res) => {
       { $match: revenueMatch },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date", timezone: "+07:00" } },
           dailyRevenue: { $sum: "$amount" },
           count: { $sum: 1 }
         }
@@ -83,8 +88,8 @@ const getDashboardData = async (req, res) => {
       { $match: peakMatch },
       {
         $project: {
-          dayOfWeek: { $isoDayOfWeek: "$date" }, // 1 (Mon) - 7 (Sun)
-          hour: { $hour: "$date" }             // 0 - 23
+          dayOfWeek: { $isoDayOfWeek: { date: "$date", timezone: "+07:00" } }, // 1 (Mon) - 7 (Sun)
+          hour: { $hour: { date: "$date", timezone: "+07:00" } }             // 0 - 23
         }
       },
       {

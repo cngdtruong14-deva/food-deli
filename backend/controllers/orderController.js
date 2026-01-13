@@ -7,7 +7,7 @@ import recipeModel from "../models/recipeModel.js";
 import ingredientModel from "../models/ingredientModel.js";
 import stockModel from "../models/stockModel.js";
 import Stripe from "stripe";
-import { io } from "../server.js";
+import { getIO } from "../utils/socket.js";
 import fs from 'fs'; // Added for debug log
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -61,15 +61,13 @@ const deductInventoryForOrder = async (orderId) => {
             console.warn(`[Inventory] WARNING: ${name} has NEGATIVE stock: ${updatedStock.quantity}`);
           } else if (updatedStock.quantity < updatedStock.minThreshold) {
             console.warn(`[Inventory] LOW STOCK: ${name} is below minimum (${updatedStock.quantity}/${updatedStock.minThreshold})`);
-            if (io) {
-                io.emit("stock:alert", {
-                    type: "LOW_STOCK",
-                    ingredient: name,
-                    quantity: updatedStock.quantity,
-                    threshold: updatedStock.minThreshold,
-                    branchId: branchId
-                });
-            }
+            getIO().emit("stock:alert", {
+                type: "LOW_STOCK",
+                ingredient: name,
+                quantity: updatedStock.quantity,
+                threshold: updatedStock.minThreshold,
+                branchId: branchId
+            });
           }
         } else {
             console.warn(`[Inventory] Stock entry not found for ingredient ${ing.ingredientId} at branch ${branchId}`);
@@ -183,8 +181,11 @@ const placeOrder = async (req, res) => {
     const deliveryFee = isDineIn ? 0 : 15000;
     const finalAmount = Math.round(calculatedAmount + deliveryFee);
     
+    // Auth ID usually comes from req.user (middleware), legacy/test fallback to body
+    const userId = req.user ? req.user.id : req.body.userId;
+
     const newOrder = new orderModel({
-      userId: req.body.userId, // Null if guest
+      userId: userId, // Null if guest
       guestId: guestId,        // Unique Guest ID
       items: verifiedItems,
       amount: finalAmount,
@@ -199,9 +200,10 @@ const placeOrder = async (req, res) => {
     await newOrder.save({ session });
     
     // Clear cart (within transaction)
-    if (req.body.userId) {
+    if (userId) {
       await userModel.findByIdAndUpdate(
-        req.body.userId, 
+        userId, 
+        { cartData: {} }, 
         { cartData: {} },
         { session }
       );
@@ -212,17 +214,15 @@ const placeOrder = async (req, res) => {
     
     // Emit Stock Update Event to all clients (AFTER successful commit)
     // Note: Stock updates are not handled by Change Streams, so always emit
-    if (io) {
-        const stockUpdates = items.map(item => ({
-            id: item._id,
-            change: -item.quantity 
-        }));
-        io.emit("food:stock_updated", stockUpdates);
-    }
+    const stockUpdates = items.map(item => ({
+        id: item._id,
+        change: -item.quantity 
+    }));
+    getIO().emit("food:stock_updated", stockUpdates);
     
     // Emit table status update (AFTER successful commit)
-    if (isDineIn && req.body.tableId && io) {
-      io.emit("table:status_updated", { 
+    if (isDineIn && req.body.tableId) {
+      getIO().emit("table:status_updated", { 
         tableId: req.body.tableId, 
         branchId: req.body.branchId, 
         status: "Occupied" 
@@ -322,18 +322,16 @@ const verifyOrder = async (req, res) => {
           stockUpdates.push({ id: item._id, change: item.quantity });
         }
         
-        if (io && stockUpdates.length > 0) {
-            io.emit("food:stock_updated", stockUpdates);
+        if (stockUpdates.length > 0) {
+            getIO().emit("food:stock_updated", stockUpdates);
         }
         
         // Free Table (Immediately available if payment failed/cancelled)
         if (order.tableId) {
             await tableModel.findByIdAndUpdate(order.tableId, { status: "Available" });
-             if (io) {
-                // Determine branchId properly. order.branchId might be ID or Object depending on population (here it is ID from verify)
-                const branchId = order.branchId; 
-                io.emit("table:status_updated", { tableId: order.tableId, branchId: branchId, status: "Available" });
-            }
+            // Determine branchId properly. order.branchId might be ID or Object depending on population (here it is ID from verify)
+            const branchId = order.branchId; 
+            getIO().emit("table:status_updated", { tableId: order.tableId, branchId: branchId, status: "Available" });
         }
       }
       await orderModel.findByIdAndDelete(orderId);
@@ -348,7 +346,7 @@ const verifyOrder = async (req, res) => {
 // Mark COD order as paid (admin function)
 const markAsPaid = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (userData && userData.role === "admin") {
       await orderModel.findByIdAndUpdate(req.body.orderId, { 
         payment: true,
@@ -356,12 +354,10 @@ const markAsPaid = async (req, res) => {
       });
       
       // Emit update
-      if (io) {
-        io.emit("order:status_updated", {
-          orderId: req.body.orderId,
-          status: "Paid",
-        });
-      }
+      getIO().emit("order:status_updated", {
+        orderId: req.body.orderId,
+        status: "Paid",
+      });
       
       res.json({ success: true, message: "Order marked as paid" });
     } else {
@@ -378,7 +374,9 @@ const userOrders = async (req, res) => {
   try {
     let query = {};
     // Prioritize userId (Logged in), otherwise check guestId (Anonymous)
-    if (req.body.userId) {
+    if (req.user && req.user.id) {
+        query.userId = req.user.id;
+    } else if (req.body.userId) {
         query.userId = req.body.userId;
     } else if (req.body.guestId) {
         query.guestId = req.body.guestId;
@@ -401,7 +399,7 @@ const userOrders = async (req, res) => {
 // Listing orders for admin pannel
 const listOrders = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (userData && userData.role === "admin") {
       const orders = await orderModel.find({}).populate("branchId", "name").populate("tableId", "tableNumber floor");
       res.json({ success: true, data: orders });
@@ -417,7 +415,7 @@ const listOrders = async (req, res) => {
 // api for updating status
 const updateStatus = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (userData && userData.role === "admin") {
       const { orderId, status, reason } = req.body;
       
@@ -445,9 +443,7 @@ const updateStatus = async (req, res) => {
       // Auto-Free Table on Cancellation
       if (status === "Cancelled" && updatedOrder && updatedOrder.tableId) {
           await tableModel.findByIdAndUpdate(updatedOrder.tableId, { status: "Available" });
-          if (io) {
-             io.emit("table:status_updated", { tableId: updatedOrder.tableId, branchId: updatedOrder.branchId, status: "Available" });
-          }
+          getIO().emit("table:status_updated", { tableId: updatedOrder.tableId, branchId: updatedOrder.branchId, status: "Available" });
       }
       
       // RESTORE FOOD STOCK ON CANCELLATION (Fix for Real-time Logic)
@@ -462,9 +458,9 @@ const updateStatus = async (req, res) => {
              stockUpdates.push({ id: item._id, change: item.quantity });
           }
           
-          if (io && stockUpdates.length > 0) {
+          if (stockUpdates.length > 0) {
               console.log("[Socket] Emitting Stock Restore on Cancel:", stockUpdates);
-              io.emit("food:stock_updated", stockUpdates);
+              getIO().emit("food:stock_updated", stockUpdates);
           }
       }
 
@@ -476,7 +472,11 @@ const updateStatus = async (req, res) => {
 
       // Emit real-time event for status update
       // CRITICAL FIX: Only emit if Change Streams are NOT active (prevent double emission)
-      if (io && updatedOrder && !global.CHANGE_STREAMS_ACTIVE) {
+      // Safe check: getIO() throws if not initialized, so we wrap in try
+      let socketReady = false;
+      try { getIO(); socketReady = true; } catch(e) { /* Socket not initialized */ }
+      
+      if (socketReady && updatedOrder && !global.CHANGE_STREAMS_ACTIVE) {
         // Populate order for consistent payload format
         // Note: userId is String, not ObjectId ref, so we can't populate it
         const populatedOrder = await orderModel.findById(updatedOrder._id)
@@ -494,16 +494,16 @@ const updateStatus = async (req, res) => {
         // userId is String, not ObjectId
         if (populatedOrder.userId) {
           const userId = populatedOrder.userId.toString();
-          io.to(`user_${userId}`).emit("order:status_updated", payload);
+          getIO().to(`user_${userId}`).emit("order:status_updated", payload);
         }
         
         if (populatedOrder.branchId) {
           const branchId = populatedOrder.branchId._id?.toString() || populatedOrder.branchId.toString();
-          io.to(`branch_${branchId}`).emit("order:status_updated", payload);
+          getIO().to(`branch_${branchId}`).emit("order:status_updated", payload);
         }
         
         // Notify Admins
-        io.to('admin_notifications').emit("order:status_updated", payload);
+        getIO().to('admin_notifications').emit("order:status_updated", payload);
       }
 
       res.json({ success: true, message: "Status Updated Successfully" });
@@ -519,7 +519,7 @@ const updateStatus = async (req, res) => {
 // Cleanup Debug Orders (Admin only)
 const cleanupDebugOrders = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Unauthorized" });
     }

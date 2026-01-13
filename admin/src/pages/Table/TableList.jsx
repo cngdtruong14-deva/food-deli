@@ -128,9 +128,18 @@ const TableList = ({ url }) => {
   };
 
   const copyQRLink = (table) => {
-    // Generate QR Link (Assuming frontend URL)
-    // Here we construct link to a menu page or ordering page.
-    const link = `http://localhost:5173/menu?tableId=${table._id}&branchId=${table.branchId._id || table.branchId}`;
+    // Determine Client URL
+    // Ideally this comes from an env var, but for now we can infer or fallback
+    // If the admin is on the same domain/port as client (unlikely in dev, possible in prod if served together)
+    // fallback to a prompt or standard port 5173
+    const clientPort = '5173';
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    // Construct base URL - adjust port if we are in dev (usually admin 5174, client 5173)
+    const baseUrl = `${protocol}//${hostname}:${clientPort}`; // Default to dev standard
+    
+    const link = `${baseUrl}/menu?tableId=${table._id}&branchId=${table.branchId._id || table.branchId}`;
     navigator.clipboard.writeText(link);
     toast.success("QR Link copied to clipboard!");
   };

@@ -222,8 +222,8 @@ async function seedData() {
 
       // Check if image exists
       if (!fs.existsSync(imagePath)) {
-        console.log(`  ! Skipped ${product.name} (Missing image: ${imageFileName})`);
-        continue; 
+        console.log(`  ! Warning: ${product.name} (Missing image: ${imageFileName}) - Creating anyway.`);
+        // continue; 
       }
       
       await foodModel.create({

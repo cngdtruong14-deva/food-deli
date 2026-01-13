@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import './Inventory.css';
-import { FaPlus, FaTrash, FaEdit, FaExclamationTriangle, FaBoxOpen, FaSearch, FaChartLine, FaMoneyBillWave, FaWarehouse, FaTruck, FaSort, FaSortUp, FaSortDown, FaSpinner, FaFileExport, FaChevronLeft, FaChevronRight, FaHistory, FaClipboardCheck, FaTimesCircle } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaExclamationTriangle, FaBoxOpen, FaSearch, FaChartLine, FaMoneyBillWave, FaWarehouse, FaTruck, FaSort, FaSortUp, FaSortDown, FaSpinner, FaFileExport, FaChevronLeft, FaChevronRight, FaHistory, FaClipboardCheck, FaTimesCircle, FaRobot } from 'react-icons/fa';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
+import SmartRestock from './SmartRestock';
 import PropTypes from 'prop-types';
 
 const Inventory = ({ url }) => {
+  const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
   const [foods, setFoods] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -191,7 +193,21 @@ const Inventory = ({ url }) => {
   const handleSubmit = async (e, keepOpen = false) => {
     e.preventDefault();
     try {
-      const userId = localStorage.getItem('userId');
+      // Try to get userId from localStorage, fallback to decoding from JWT token
+      let userId = localStorage.getItem('userId');
+      if (!userId || userId === 'null' || userId === 'undefined') {
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            // JWT structure: header.payload.signature - we need the payload
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.id;
+          } catch (err) {
+            console.error('Failed to decode token:', err);
+          }
+        }
+      }
+      
       // Payload preparation
       const payload = {
           ...currentItem,
@@ -457,8 +473,8 @@ const Inventory = ({ url }) => {
     let filtered = [...ingredients];
     if (searchQuery) {
       filtered = filtered.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase())
+        (item.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (item.category?.toLowerCase() || '').includes(searchQuery.toLowerCase())
       );
     }
     if (categoryFilter !== 'all') {
@@ -618,96 +634,106 @@ const Inventory = ({ url }) => {
           >
             Phân Tích Lợi Nhuận
           </button>
+          <button 
+            className={`tab-btn ${activeTab === 'forecast' ? 'active' : ''}`}
+            onClick={() => setActiveTab('forecast')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FaRobot /> Dự báo AI
+          </button>
       </div>
 
       {/* Filter Bar */}
-      <div className="inventory-filters">
-        <div className="search-box">
+      {/* Premium Toolbar */}
+      <div className="inventory-toolbar">
+        {/* Search */}
+        <div className="premium-search">
           <FaSearch className="search-icon" />
           <input
             type="text"
-            placeholder={activeTab === 'warehouse' ? "Tìm nguyên liệu..." : "Tìm món ăn..."}
+            placeholder={activeTab === 'warehouse' ? "Tìm kiếm nguyên liệu, danh mục..." : "Tìm món ăn..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
           />
         </div>
         
         {activeTab === 'warehouse' && (
           <>
-            {/* Warehouse Selector - Hide for Managers */}
-            {userRole === 'admin' && (
-                <div className="filter-group">
-                <label>Xem Kho:</label>
+            {/* Filters Group */}
+            <div style={{display:'flex', gap:'12px', alignItems:'center', flexWrap: 'wrap'}}>
+                {userRole === 'admin' && (
+                  <select
+                      value={currentBranchId}
+                      onChange={(e) => setCurrentBranchId(e.target.value)}
+                      className="filter-select"
+                      style={{minWidth: '180px', background: 'rgba(255,255,255,0.5)'}}
+                  >
+                      <option value="null">🏢 Kho Tổng (Central)</option>
+                      {branches.map(b => (
+                          <option key={b._id} value={b._id}>📍 {b.name}</option>
+                      ))}
+                  </select>
+                )}
+                
                 <select
-                    value={currentBranchId}
-                    onChange={(e) => setCurrentBranchId(e.target.value)}
-                    className="filter-select"
-                    style={{minWidth: '200px', fontWeight: 'bold', borderColor: '#2563EB'}}
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="filter-select"
+                  style={{background: 'rgba(255,255,255,0.5)'}}
                 >
-                    <option value="null">Kho Tổng (Central)</option>
-                    {branches.map(b => (
-                        <option key={b._id} value={b._id}>{b.name}</option>
-                    ))}
+                  <option value="all">📂 Tất cả danh mục</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
-                </div>
-            )}
-            
-            <div className="filter-group">
-              <label>Danh mục:</label>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">Tất cả</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Trạng thái:</label>
-              <select
-                value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">Tất cả</option>
-                <option value="good">Đủ hàng</option>
-                <option value="low">Sắp hết</option>
-                <option value="out">Hết hàng</option>
-              </select>
-            </div>
-            <div className="filter-group" style={{display:'flex', alignItems:'center'}}>
-              <label style={{marginRight:'8px', cursor:'pointer'}}>
-                <input 
-                    type="checkbox" 
-                    checked={autoRefresh} 
-                    onChange={(e) => setAutoRefresh(e.target.checked)}
-                    style={{marginRight:'5px'}} 
-                />
-                Tự động làm mới
-              </label>
+
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value)}
+                  className="filter-select"
+                  style={{background: 'rgba(255,255,255,0.5)'}}
+                >
+                  <option value="all">📊 Tất cả trạng thái</option>
+                  <option value="good">✅ Đủ hàng</option>
+                  <option value="low">⚠️ Sắp hết</option>
+                  <option value="out">❌ Hết hàng</option>
+                </select>
             </div>
 
-            <button className="export-btn" onClick={handleExport} title="Xuất Excel">
-                <FaFileExport /> Xuất Excel
-            </button>
+            {/* Actions Group */}
+            <div className="premium-actions">
+                 {/* Auto Refresh Toggle */}
+                <label className="toggle-wrapper">
+                    <div className="toggle-label">
+                        Auto
+                        {autoRefresh && <span className="pulse-indicator"></span>}
+                    </div>
+                    <input 
+                        type="checkbox" 
+                        className="toggle-input"
+                        checked={autoRefresh} 
+                        onChange={(e) => setAutoRefresh(e.target.checked)}
+                    />
+                    <div className="toggle-switch"></div>
+                </label>
 
-            <button 
-                className={`audit-mode-btn ${isAuditMode ? 'active' : ''}`} 
-                onClick={toggleAuditMode}
-                title="Kiểm kê"
-            >
-                <FaClipboardCheck /> {isAuditMode ? 'Thoát Kiểm Kê' : 'Kiểm Kê'}
-            </button>
-
-            {isAuditMode && Object.keys(auditChanges).length > 0 && (
-                <button className="audit-submit-btn" onClick={handleAuditSubmit}>
-                    Lưu Kiểm Kê ({Object.keys(auditChanges).length})
+                <button className="btn-premium btn-export" onClick={handleExport} title="Xuất báo cáo">
+                    <FaFileExport /> Export
                 </button>
-            )}
+
+                {isAuditMode && Object.keys(auditChanges).length > 0 ? (
+                    <button className="btn-premium btn-save-audit" onClick={handleAuditSubmit}>
+                        <FaClipboardCheck /> Lưu Kiểm Kê ({Object.keys(auditChanges).length})
+                    </button>
+                ) : (
+                    <button 
+                        className={`btn-premium btn-audit ${isAuditMode ? 'active' : ''}`} 
+                        onClick={toggleAuditMode}
+                    >
+                        <FaClipboardCheck /> {isAuditMode ? 'Thoát Kiểm Kê' : 'Kiểm Kê Kho'}
+                    </button>
+                )}
+            </div>
           </>
         )}
       </div>
@@ -851,7 +877,9 @@ const Inventory = ({ url }) => {
             </div>
           )}
           </>
-        ) : (
+        ) : null}
+        
+        {activeTab === 'profit' && (
           <table className="inventory-table">
             <thead>
               <tr>
@@ -899,6 +927,10 @@ const Inventory = ({ url }) => {
             </tbody>
           </table>
         )}
+        
+        {activeTab === 'forecast' && (
+          <SmartRestock url={url} />
+        )}
       </div>
       
       {/* Modal - Add/Edit Ingredient */}
@@ -910,10 +942,6 @@ const Inventory = ({ url }) => {
               <button className="close-modal" onClick={() => setShowModal(false)}>×</button>
             </div>
             
-  const navigate = useNavigate();
-
-  // ... (inside the modal)
-
             {!isEditing && (
                 <div className="info-box" style={{marginBottom: '15px', background: '#e0f2fe', padding: '10px', borderRadius: '4px', fontSize: '13px', color: '#0369a1'}}>
                     <p>💡 <strong>Gợi ý:</strong> Chức năng này dùng để định nghĩa nguyên liệu mới.</p>

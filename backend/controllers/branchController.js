@@ -5,7 +5,7 @@ import userModel from "../models/userModel.js";
 // Add branch (Admin only)
 const addBranch = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Unauthorized: Admin only" });
     }
@@ -27,7 +27,8 @@ const addBranch = async (req, res) => {
 // List branches (Role Aware)
 const listBranches = async (req, res) => {
   try {
-    const userId = req.body.userId || req.query.userId;
+    // Note: admin check should use token context
+    const userId = req.user ? req.user.id : (req.body.userId || req.query.userId);
     let query = { isActive: true };
 
     // Role Check - FIX: Handle "null" string properly
@@ -80,7 +81,7 @@ const getBranch = async (req, res) => {
 // Update branch (Admin/Manager)
 const updateBranch = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -110,7 +111,7 @@ const updateBranch = async (req, res) => {
 // Remove branch (Admin only - soft delete)
 const removeBranch = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Unauthorized: Admin only" });
     }

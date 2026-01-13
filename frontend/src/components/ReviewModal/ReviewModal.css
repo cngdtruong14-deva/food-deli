@@ -94,7 +94,8 @@
 
 .star {
   font-size: 40px;
-  color: #D1D5DB;
+  color: #E5E7EB; /* Light gray fill */
+  -webkit-text-stroke: 1.5px #6B7280; /* Dark gray border */
   cursor: pointer;
   transition: all 0.15s ease;
   -webkit-tap-highlight-color: transparent;
@@ -105,7 +106,8 @@
 }
 
 .star.filled {
-  color: #FBBF24;
+  color: #FBBF24; /* Gold fill */
+  -webkit-text-stroke: 0; /* No border for filled, or distinct if preferred */
   text-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
 }
 

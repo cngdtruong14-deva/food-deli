@@ -95,4 +95,36 @@ const getAuditHistory = async (req, res) => {
     }
 }
 
-export { auditInventory, getAuditHistory };
+// AI-powered Smart Restock Suggestions
+import axios from "axios";
+
+const getSmartRestockSuggestions = async (req, res) => {
+    try {
+        const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+        
+        const response = await axios.get(`${AI_SERVICE_URL}/api/forecast/ingredients`);
+        
+        if (response.data.success) {
+            res.json({
+                success: true,
+                data: response.data.data,
+                message: response.data.message
+            });
+        } else {
+            res.json({
+                success: false,
+                message: response.data.message || "Failed to fetch forecast"
+            });
+        }
+    } catch (error) {
+        console.error("AI Forecast Error:", error.message);
+        // Graceful degradation if AI service is down
+        res.json({
+            success: true,
+            data: [],
+            message: "AI Service không khả dụng. Vui lòng thử lại sau."
+        });
+    }
+};
+
+export { auditInventory, getAuditHistory, getSmartRestockSuggestions };

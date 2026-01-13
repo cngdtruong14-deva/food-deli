@@ -30,6 +30,7 @@ const LoginDropdown = ({ url, onLoginSuccess, onClose }) => {
           setAdmin(true);
           localStorage.setItem("token", response.data.token);
           localStorage.setItem("admin", true);
+          localStorage.setItem("userId", response.data.userId);
           toast.success("Đăng nhập thành công");
           onLoginSuccess();
         } else {

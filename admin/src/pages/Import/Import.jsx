@@ -46,13 +46,30 @@ const Import = ({ url }) => {
     { value: 'OTHER', label: 'Khác' }
   ];
 
+  // Helper: Get userId from localStorage or decode from JWT token
+  const getUserId = () => {
+    let userId = localStorage.getItem('userId');
+    if (!userId || userId === 'null' || userId === 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          userId = payload.id;
+        } catch (err) {
+          console.error('Failed to decode token:', err);
+        }
+      }
+    }
+    return userId;
+  };
+
   // =========================================
   // DATA FETCHING
   // =========================================
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = getUserId();
       const [suppRes, recRes, ingRes, branchRes] = await Promise.all([
         axios.get(`${url}/api/import/suppliers`),
         axios.get(`${url}/api/import/receipts?status=${statusFilter}`),
@@ -97,7 +114,7 @@ const Import = ({ url }) => {
   const handleSupplierSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = getUserId();
       const payload = { ...supplierForm, userId };
       
       let response;
@@ -170,7 +187,7 @@ const Import = ({ url }) => {
     }
     
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = getUserId();
       
       // Create receipt (PENDING)
       const createRes = await axios.post(`${url}/api/import/receipts`, {
@@ -207,7 +224,7 @@ const Import = ({ url }) => {
 
   const completeReceipt = async (id) => {
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = getUserId();
       const response = await axios.post(`${url}/api/import/receipts/${id}/complete`, { userId });
       if (response.data.success) {
         toast.success(response.data.message);
@@ -222,7 +239,7 @@ const Import = ({ url }) => {
 
   const cancelReceipt = async (id) => {
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = getUserId();
       const response = await axios.post(`${url}/api/import/receipts/${id}/cancel`, { 
         userId, 
         reason: 'Hủy bởi người dùng' 

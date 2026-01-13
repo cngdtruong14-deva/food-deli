@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./Reviews.css";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Star, Eye, X, User, MapPin, ShoppingBag, Phone, Mail, MessageSquare } from "lucide-react";
+import { Star, Eye, X, User, MapPin, ShoppingBag, Phone, Mail, MessageSquare, Trash2 } from "lucide-react";
 
 const Reviews = ({ url }) => {
   const [reviews, setReviews] = useState([]);
@@ -10,18 +10,28 @@ const Reviews = ({ url }) => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [submittingReply, setSubmittingReply] = useState(false);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalReviews, setTotalReviews] = useState(0);
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (page = 1) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${url}/api/reviews/admin/list`,
+        `${url}/api/reviews/admin/list?page=${page}&limit=20`,
         {},
         { headers: { token } }
       );
       if (response.data.success) {
         setReviews(response.data.data);
+        if (response.data.pagination) {
+          setCurrentPage(response.data.pagination.page);
+          setTotalPages(response.data.pagination.pages);
+          setTotalReviews(response.data.pagination.total);
+        }
       } else {
         toast.error(response.data.message || "Không thể tải đánh giá");
       }
@@ -100,10 +110,10 @@ const Reviews = ({ url }) => {
 
   return (
     <div className="reviews-admin">
-      <div className="reviews-header">
+        <div className="reviews-header">
         <h2>Quản lý Đánh giá</h2>
         <p className="reviews-subtitle">
-          {reviews.length} đánh giá từ khách hàng
+          {totalReviews} đánh giá từ khách hàng (Trang {currentPage}/{totalPages})
         </p>
       </div>
 
@@ -126,7 +136,7 @@ const Reviews = ({ url }) => {
                 <th>Đánh giá</th>
                 <th>Nhận xét</th>
                 <th>Phản hồi</th>
-                <th>Truy vết</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -151,22 +161,55 @@ const Reviews = ({ url }) => {
                       <span className="pending-reply">Chưa trả lời</span>
                     )}
                   </td>
-                  <td>
-                    <button 
-                      className="trace-btn"
-                      onClick={() => {
-                        setSelectedReview(review);
-                        setReplyText("");
-                      }}
-                    >
-                      <Eye size={16} />
-                      Xem
-                    </button>
+                  <td className="action-cell">
+                    <div className="action-buttons">
+                      <button 
+                        className="trace-btn"
+                        onClick={() => {
+                          setSelectedReview(review);
+                          setReplyText("");
+                        }}
+                        title="Xem chi tiết"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDeleteReview(review._id)}
+                        title="Xóa đánh giá"
+                        style={{ marginLeft: '8px', padding: '6px', cursor: 'pointer', background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: '4px', color: '#EF4444' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', gap: '10px', padding: '20px' }}>
+            <button 
+              onClick={() => fetchReviews(currentPage - 1)} 
+              disabled={currentPage === 1}
+              className="pagination-btn"
+              style={{ padding: '8px 16px', background: currentPage === 1 ? '#F3F4F6' : 'white', border: '1px solid #D1D5DB', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            >
+              Trước
+            </button>
+            <span style={{ display: 'flex', alignItems: 'center' }}>
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button 
+              onClick={() => fetchReviews(currentPage + 1)} 
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+              style={{ padding: '8px 16px', background: currentPage === totalPages ? '#F3F4F6' : 'white', border: '1px solid #D1D5DB', borderRadius: '6px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Sau
+            </button>
+          </div>
         </div>
       )}
 

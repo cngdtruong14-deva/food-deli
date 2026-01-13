@@ -41,76 +41,10 @@
     background: #fff;
 }
 
-/* Combo/Upsell Carousel Styling */
-.upsell-section {
-    background: linear-gradient(135deg, #FFF8E1 0%, #FFF 100%);
-    padding: 30px 20px;
-    border-radius: 24px;
-    margin-bottom: 40px;
-    border: 2px solid #FFC107;
-    position: relative;
-    overflow: hidden;
-}
+/* Force Ribbon Wrapper to fill height for Grid View items */
 
-.upsell-section::before {
-    content: "SPECIAL OFFERS";
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 80px;
-    font-weight: 900;
-    color: rgba(255, 193, 7, 0.1);
-    z-index: 0;
-    pointer-events: none;
-}
-
-.upsell-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 25px;
-    position: relative;
-    z-index: 1;
-}
-
-.upsell-header svg {
-    color: #FFC107;
-    font-size: 32px;
-}
-
-.upsell-header h2 {
-    color: #D84315;
-    margin: 0;
-    font-size: 28px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.combo-carousel-container {
-    position: relative;
-    z-index: 1;
-    padding-bottom: 30px; /* Space for dots */
-}
-
-/* React Multi Carousel Customization */
-.react-multiple-carousel__arrow {
-    background: rgba(255, 255, 255, 0.8) !important;
-    border: 1px solid #FFC107 !important;
-}
-
-.react-multiple-carousel__arrow::before {
-    color: #D84315 !important;
-}
-
-.react-multiple-carousel__arrow:hover {
-    background: #FFC107 !important;
-}
-
-.react-multiple-carousel__arrow:hover::before {
-    color: white !important;
-}
-
-/* Ensure items in carousel don't get cut off vertically due to hover effect */
-.react-multi-carousel-item {
-    padding: 15px 10px; /* Add vertical padding for hover transform */
+/* Force Ribbon Wrapper to fill height so FoodItem can be 100% */
+.ant-ribbon-wrapper {
+    height: 100%;
+    width: 100%;
 }

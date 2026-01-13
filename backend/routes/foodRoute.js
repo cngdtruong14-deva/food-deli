@@ -1,5 +1,5 @@
 import express from "express";
-import { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood } from "../controllers/foodController.js";
+import { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood, getRecommendations } from "../controllers/foodController.js";
 import multer from "multer";
 import authMiddleware from "../middleware/auth.js";
 
@@ -26,5 +26,7 @@ foodRouter.post("/restore", authMiddleware, restoreFood);
 foodRouter.post("/force-delete", authMiddleware, forceDeleteFood);
 foodRouter.post("/update", upload.single("image"), authMiddleware, updateFood);
 
-export default foodRouter;
+// AI-powered recommendations (Smart Combo)
+foodRouter.get("/:id/recommendations", getRecommendations);
 
+export default foodRouter;

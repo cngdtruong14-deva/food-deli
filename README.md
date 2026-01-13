@@ -37,54 +37,158 @@ A full-stack food delivery application built with the **MERN Stack** (MongoDB, E
 - **Backend**: Node.js, Express.js, MongoDB (Mongoose), JWT, Bcrypt, Multer
 - **Payment**: Stripe Integration
 
-## 📦 Installation & Setup
+## 🛠️ Cài đặt & Khởi chạy (Installation & Setup)
 
-1. **Clone the repository**
+Để chạy dự án trên máy cục bộ, vui lòng làm theo các bước sau:
 
-   ```bash
-   git clone https://github.com/yourusername/food-deli.git
-   cd food-deli
-   ```
+### 📋 Yêu cầu hệ thống (Prerequisites)
 
-2. **Backend Setup**
+- [Node.js](https://nodejs.org/) (Khuyến nghị phiên bản LTS mới nhất)
+- [MongoDB](https://www.mongodb.com/) (Dùng phiên bản cài đặt sẵn trên máy hoặc MongoDB Atlas)
+- **Git**
 
-   ```bash
-   cd backend
-   npm install
+### 1. Clone dự án
 
-   # Create .env file
-   # PORT=4000
-   # MONGO_URL=your_mongodb_connection_string
-   # JWT_SECRET=your_jwt_secret
-   # STRIPE_SECRET_KEY=your_stripe_secret_key
+```bash
+git clone https://github.com/yourusername/food-deli.git
+cd food-deli
+```
 
-   # Run the server
-   npm run server
-   ```
+### 2. Cài đặt Backend
 
-3. **Frontend Setup**
+Backend chạy trên cổng `4000` mặc định.
 
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
+```bash
+cd backend
+npm install
 
-4. **Admin Panel Setup**
-   ```bash
-   cd ../admin
-   npm install
-   npm run dev
-   ```
+# Tạo file .env trong thư mục backend
+# Copy nội dung dưới đây vào file .env:
+# PORT=4000
+# MONGO_URL=mongodb://localhost:27017/food-deli  (Hoặc connection string của bạn)
+# JWT_SECRET=chuoi_bi_mat_cua_ban
+# STRIPE_SECRET_KEY=khoa_bi_mat_stripe_cua_ban
 
-## 🗃️ Database Seeding (Optional)
+# Khởi chạy server
+npm run server
+```
 
-To populate the database with the initial Vietnamese menu:
+Sau khi chạy, API sẽ hoạt động tại: `http://localhost:4000`
+
+### 3. Cài đặt Frontend (App Khách hàng)
+
+Frontend chạy trên cổng `5173` mặc định (Vite).
+
+```bash
+cd ../frontend
+npm install
+
+# Tạo file .env trong thư mục frontend (Nếu cần kết nối API khác localhost)
+# VITE_API_URL=http://localhost:4000
+
+# Khởi chạy ứng dụng
+npm run dev
+```
+
+Truy cập App Khách hàng tại: `http://localhost:5173`
+
+### 4. Cài đặt Admin Panel (Trang quản trị)
+
+Admin Panel dùng để quản lý món ăn và đơn hàng.
+
+```bash
+cd ../admin
+npm install
+
+# Tạo file .env trong thư mục admin
+# VITE_API_URL=http://localhost:4000
+
+# Khởi chạy trang quản trị
+npm run dev
+```
+
+Truy cập Admin Panel tại: `http://localhost:5173` (Lưu ý: Vite có thể tự đổi cổng nếu 5173 đang bận, hãy kiểm tra terminal)
+
+## 🗃️ Khởi tạo dữ liệu mẫu (Database Seeding)
+
+Để thêm sẵn danh sách món ăn Việt Nam vào database:
 
 ```bash
 cd backend/scripts
 node seedVietnameseMenu.js
 ```
+
+**Lưu ý quan trọng (Dữ liệu Chi nhánh & Bàn ăn):**
+Để khởi tạo lại toàn bộ dữ liệu Chi nhánh và Bàn ăn (tránh lỗi mất dữ liệu bàn khi ID chi nhánh thay đổi), hãy chạy lệnh:
+
+```bash
+node backend/scripts/seed_all.js
+```
+
+_Script này sẽ tự động xóa và tạo lại 17 chi nhánh, sau đó tạo mới ~1500 bàn ăn tương ứng._
+
+## 🤖 Tính năng AI & Hướng dẫn Kiểm thử (AI Features & Testing)
+
+Hệ thống tích hợp hai tính năng AI chính:
+
+1. **Gợi ý món ăn thông minh (Combo Recommendation):** Dựa trên giỏ hàng hiện tại.
+2. **Dự báo nhập hàng (Demand Forecasting):** Dựa trên lịch sử bán hàng 30 ngày qua.
+
+### 1️⃣ Khởi động AI Service (Bắt buộc)
+
+Trước khi test, hãy đảm bảo Python Service đang chạy.
+
+```bash
+cd ai_service
+# Cài đặt thư viện nếu chưa có
+pip install -r requirements.txt
+# Chạy service
+python app.py
+# Server sẽ chạy tại http://localhost:5001
+```
+
+### 2️⃣ Kiểm tra Tổng thể (System Health Check)
+
+Chạy script tự động để kiểm tra kết nối giữa Node.js, Python, và Database.
+
+```bash
+node backend/tests/manual_scripts/verify_ai_system.js
+```
+
+_Script này sẽ báo cáo trạng thái PASS/FAIL cho từng endpoint._
+
+### 3️⃣ nạp dữ liệu mẫu (Data Seeding)
+
+**Bước A: Nạp Menu (Nếu chưa có)**
+
+```bash
+node backend/scripts/seedVietnameseMenu.js
+```
+
+_Tạo danh sách 148 món ăn từ menu Quán Nhậu Tự Do._
+
+**Bước B: Tạo dữ liệu giả lập cho Dự báo (Forecasting Test)**
+Để test biểu đồ dự báo nhập hàng, bạn cần có lịch sử đơn hàng. Script dưới đây sẽ tạo 100 đơn hàng trong 30 ngày qua.
+
+```bash
+node backend/tests/manual_scripts/test_ai_service.js
+```
+
+**Kịch bản kiểm tra (Test Scenario):**
+
+1.  **Health Check**: Ping kết nối tới Python Service và MongoDB.
+2.  **Seeding**: Tự động tạo dữ liệu mẫu (Ví dụ: Order chứa Burger & Coke).
+3.  **Simulation**: Gửi request hỏi "Mua Burger thì nên kèm gì?".
+4.  **Verification**: Kiểm tra phản hồi của AI có gợi ý "Coke" hay không.
+5.  **Cleanup**: P xóa toàn bộ dữ liệu rác sau khi test xong.
+    \_Lưu ý: Script này sử dụng "COMBO 1" và "COMBO 2" thực tế từ menu để tạo đơn hàng
+
+### 4️⃣ Kiểm tra trên Giao diện (UI)
+
+1. Truy cập **Admin Panel** -> **Quản Lý Tồn Kho (Inventory)**.
+2. Chọn tab **"📊 Dự báo AI"**.
+3. Bạn sẽ thấy biểu đồ so sánh Tồn kho thực tế vs Nhu cầu dự kiến.
+4. Các món cần nhập hàng sẽ có cảnh báo màu **Đỏ (Critical)** hoặc **Vàng (Warning)**.
 
 ## 📸 Screenshots
 

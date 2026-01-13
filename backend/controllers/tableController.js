@@ -1,12 +1,12 @@
 import tableModel from "../models/tableModel.js";
 import branchModel from "../models/branchModel.js";
 import userModel from "../models/userModel.js";
-import { io } from "../server.js";
+import { getIO } from "../utils/socket.js";
 
 // Add table (Admin/Manager)
 const addTable = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -70,7 +70,7 @@ const getTableByQR = async (req, res) => {
 // Update table status
 const updateTableStatus = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || !["admin", "manager", "staff"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }
@@ -81,8 +81,8 @@ const updateTableStatus = async (req, res) => {
       { new: true }
     );
 
-    if (table && io) {
-      io.emit("table:status_updated", {
+    if (table) {
+      getIO().emit("table:status_updated", {
         tableId: table._id,
         branchId: table.branchId,
         status: table.status
@@ -124,7 +124,7 @@ const updateTableStatus = async (req, res) => {
 // Remove table (Admin/Manager)
 const removeTable = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || !["admin", "manager"].includes(userData.role)) {
       return res.json({ success: false, message: "Unauthorized" });
     }

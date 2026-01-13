@@ -73,7 +73,13 @@ const FoodItem = ({ id, name, price, description, image, stock, originalPrice, s
             <img 
               src={url + "/images/" + image} 
               alt={name} 
-              className={`food-item-image ${isOutOfStock ? 'grayscale' : ''}`} 
+              className={`food-item-image ${isOutOfStock ? 'grayscale' : ''}`}
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = assets.rating_starts // Fallback to a safe asset or placeholder
+                    ? "https://placehold.co/600x400?text=No+Image" 
+                    : "https://placehold.co/600x400?text=No+Image";
+              }}
             />
             {isOutOfStock && <div className="out-of-stock-overlay">Hết hàng</div>}
             

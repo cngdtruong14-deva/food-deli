@@ -1,7 +1,9 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import "./FoodDetailPopup.css";
 import { assets } from "../../assets/frontend_assets/assets";
 import { StoreContext } from "../../context/StoreContext";
+import axios from "axios";
 
 import ReviewSection from "../Review/ReviewSection";
 
@@ -9,7 +11,10 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
   const { url, cartItems, addToCart, removeFromCart } = useContext(StoreContext);
   
   // Note State
-  const [note, setNote] = React.useState("");
+  const [note, setNote] = useState("");
+  
+  // AI Recommendation State
+  const [relatedProducts, setRelatedProducts] = useState([]);
   
   const currentKey = note ? `${id}_note_${note}` : id;
   const currentQuantity = cartItems[currentKey] || 0;
@@ -32,13 +37,32 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
     };
   }, []);
 
+  // Fetch AI Recommendations
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const response = await axios.get(`${url}/api/food/${id}/recommendations`);
+        if (response.data.success && response.data.recommendations) {
+          setRelatedProducts(response.data.recommendations);
+        }
+      } catch (error) {
+        console.log("Could not fetch recommendations:", error.message);
+      }
+    };
+    
+    if (id) {
+      fetchRecommendations();
+    }
+  }, [id, url]);
+
   const handleAddToCart = () => {
       addToCart(id, note);
       setNote(""); // Reset note
       // optionally onClose()
   };
 
-  return (
+
+  return ReactDOM.createPortal(
     <div className="food-detail-popup" onClick={onClose}>
       <div className="food-detail-popup-container" onClick={(e) => e.stopPropagation()}>
         <div className="food-detail-popup-title">
@@ -131,12 +155,46 @@ const FoodDetailPopup = ({ name, description, price, image, onClose, id, stock }
             </div>
           )}
 
+          {/* AI RECOMMENDATION SECTION */}
+          {relatedProducts.length > 0 && (
+            <div className="ai-recommendations-section">
+              <div className="ai-recommendations-header">
+                <span className="ai-badge">✨ Gợi ý bởi AI</span>
+                <h3>Có thể bạn sẽ thích</h3>
+              </div>
+              <div className="ai-recommendations-grid">
+                {relatedProducts.map((item) => (
+                  <div 
+                    key={item._id} 
+                    className="ai-recommendation-card"
+                    onClick={() => {
+                      // Could open another popup or add to cart directly
+                      addToCart(item._id);
+                    }}
+                  >
+                    <img 
+                      src={`${url}/images/${item.image}`} 
+                      alt={item.name} 
+                      className="ai-rec-image"
+                    />
+                    <div className="ai-rec-info">
+                      <p className="ai-rec-name">{item.name}</p>
+                      <p className="ai-rec-price">{item.price?.toLocaleString('vi-VN')} đ</p>
+                    </div>
+                    <button className="ai-rec-add-btn">+ Thêm</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* PRODUCT REVIEW SECTION */}
           <ReviewSection foodId={id} />
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

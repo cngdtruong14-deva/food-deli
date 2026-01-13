@@ -35,7 +35,7 @@ const ReviewSection = ({ foodId }) => {
             if (!isLoadMore) setLoading(true);
             else setLoadingMore(true);
 
-            const response = await axios.get(`${url}/api/review/product/${foodId}?page=${pageNum}&limit=5`);
+            const response = await axios.get(`${url}/api/reviews/product/${foodId}?page=${pageNum}&limit=5`);
             if (response.data.success) {
                 setStats(response.data.stats);
                 setTotalPages(response.data.pagination.pages);

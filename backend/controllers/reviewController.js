@@ -17,7 +17,7 @@ const maskName = (name) => {
 const submitReview = async (req, res) => {
   try {
     const { orderId, rating, comment, images } = req.body;
-    const userId = req.body.userId;
+    const userId = req.user ? req.user.id : req.body.userId;
 
     if (!orderId || !rating) {
       return res.json({ success: false, message: "Thiếu thông tin orderId hoặc rating" });
@@ -64,6 +64,9 @@ const submitReview = async (req, res) => {
     });
 
     await review.save();
+
+    // Mark order as reviewed
+    await orderModel.findByIdAndUpdate(orderId, { isReviewed: true });
 
     // HIGH PRIORITY FIX: Update averageRating for all food items in the order
     try {
@@ -179,7 +182,7 @@ const getPublicReviews = async (req, res) => {
 const getAdminReviews = async (req, res) => {
   try {
     // Verify admin status
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Không có quyền truy cập" });
     }
@@ -288,7 +291,7 @@ const replyToReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { replyText } = req.body;
-    const adminUserId = req.body.userId;
+    const adminUserId = req.user ? req.user.id : req.body.userId;
 
     // Verify admin
     const userData = await userModel.findById(adminUserId);
@@ -411,4 +414,28 @@ const getProductReviews = async (req, res) => {
   }
 };
 
-export { submitReview, getPublicReviews, getAdminReviews, checkReviewStatus, replyToReview, getProductReviews };
+// Admin: Delete a review
+const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const adminUserId = req.user ? req.user.id : req.body.userId;
+
+    // Verify admin
+    const userData = await userModel.findById(adminUserId);
+    if (!userData || userData.role !== "admin") {
+      return res.json({ success: false, message: "Không có quyền truy cập" });
+    }
+
+    const review = await reviewModel.findByIdAndDelete(reviewId);
+    if (!review) {
+      return res.json({ success: false, message: "Không tìm thấy đánh giá" });
+    }
+
+    res.json({ success: true, message: "Đã xóa đánh giá" });
+  } catch (error) {
+    console.error("Delete review error:", error);
+    res.json({ success: false, message: "Lỗi khi xóa đánh giá: " + error.message });
+  }
+};
+
+export { submitReview, getPublicReviews, getAdminReviews, checkReviewStatus, replyToReview, getProductReviews, deleteReview };

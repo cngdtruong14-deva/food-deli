@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import http from "http";
 import os from "os";
-import { Server } from "socket.io";
+import { initSocket, getIO } from "./utils/socket.js";
 import { connectDB } from "./config/db.js";
 import "dotenv/config";
 import mongoose from "mongoose";
@@ -59,7 +59,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-const io = new Server(server, {
+const io = initSocket(server, {
   cors: {
     origin: allowedOrigins.length > 0 ? allowedOrigins : "*",
     methods: ["GET", "POST"],
@@ -67,7 +67,7 @@ const io = new Server(server, {
   },
 });
 
-export { io };
+// NOTE: io is now managed by utils/socket.js. Use getIO() in other modules.
 
 // middlewares
 app.use(express.json());

@@ -19,10 +19,18 @@ const checkUserRole = async (userId) => {
 
 // Helper: Parse date range
 const parseDateRange = (startDate, endDate) => {
-    const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-    const end = endDate ? new Date(endDate) : new Date();
+    // If specific dates are provided, trust the provided timestamps (frontend handles TZ)
+    if (startDate && endDate) {
+        return { start: new Date(startDate), end: new Date(endDate) };
+    }
+    // Fallback: Default to last 30 days (Server Local Time)
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
     start.setHours(0, 0, 0, 0);
+    
+    const end = new Date();
     end.setHours(23, 59, 59, 999);
+    
     return { start, end };
 };
 
@@ -165,7 +173,7 @@ const getRevenueProfitTrend = async (req, res) => {
             { $match: orderMatch },
             {
                 $group: {
-                    _id: { $dateToString: { format: dateFormat, date: "$date" } },
+                    _id: { $dateToString: { format: dateFormat, date: "$date", timezone: "+07:00" } },
                     revenue: { $sum: "$amount" },
                     orders: { $sum: 1 },
                     items: { $push: "$items" }

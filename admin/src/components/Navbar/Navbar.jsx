@@ -36,6 +36,7 @@ const Navbar = () => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("admin");
+    localStorage.removeItem("userId");
     setToken("");
     setAdmin(false);
     toast.success("Đã đăng xuất thành công");

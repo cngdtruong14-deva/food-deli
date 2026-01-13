@@ -1,19 +1,6 @@
 import mongoose from "mongoose";
-
-const orderItemSchema = new mongoose.Schema({
-  _id: { type: String, required: true }, // Keep original Food ID
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  image: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  note: { type: String, default: "" }, // Task 1: Add note field
-  // Any other fields from food item we copied?
-}, { _id: false }); // Disable auto _id for subdoc if we use original ID? Actually let's allow it or not?
-// We usually duplicate data here.
-// Let's just use strict: false or define minimal fields.
-// User requirement: "add note: { type: String }"
-// Let's stick to generic array BUT with note mention? 
-// No, explicit schema is better.
+import orderItemSchema from "./schemas/orderItem.schema.js";
+import addressSchema from "./schemas/address.schema.js";
 
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "user", default: null },
@@ -30,9 +17,9 @@ const orderSchema = new mongoose.Schema({
     enum: ["Stripe", "Cash"],
     default: "Stripe"
   },
-  items: [orderItemSchema], // Use Sub-schema
+  items: [orderItemSchema], // Use Imported Reference
   amount: { type: Number, required: true },
-  address: { type: Object, default: {} },
+  address: { type: addressSchema, default: () => ({}) }, // Use Imported Schema
   status: { 
     type: String, 
     enum: ["Pending", "Confirmed", "Preparing", "Served", "Paid", "Cancelled"],
@@ -40,6 +27,7 @@ const orderSchema = new mongoose.Schema({
   },
   date: { type: Date, default: Date.now },
   payment: { type: Boolean, default: false },
+  isReviewed: { type: Boolean, default: false }, // Persist review status
   timeline: [{
     status: String, 
     timestamp: { type: Date, default: Date.now }

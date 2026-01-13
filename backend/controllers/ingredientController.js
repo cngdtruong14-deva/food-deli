@@ -5,16 +5,24 @@ import userModel from "../models/userModel.js"; // Import userModel for role che
 import mongoose from "mongoose";
 
 // Helper: Check User Role & Branch
+// Helper: Check User Role & Branch
 const checkUserRole = async (userId) => {
-    if (!userId) return { role: 'guest', branchId: null };
-    const user = await userModel.findById(userId);
-    return user ? { role: user.role, branchId: user.branchId } : { role: 'guest', branchId: null };
+    console.log("Checking role for userId:", userId, "Type:", typeof userId);
+    if (!userId || userId === 'null' || userId === 'undefined') return { role: 'guest', branchId: null };
+    try {
+        const user = await userModel.findById(userId);
+        console.log("User found:", user ? user.role : 'NOT FOUND');
+        return user ? { role: user.role, branchId: user.branchId } : { role: 'guest', branchId: null };
+    } catch (e) {
+        console.error("checkUserRole error:", e.message);
+        return { role: 'guest', branchId: null };
+    }
 };
 
 // Add ingredient (Master Data) - ADMIN ONLY
 const addIngredient = async (req, res) => {
     try {
-        const { role } = await checkUserRole(req.body.userId);
+        const { role } = await checkUserRole(req.user ? req.user.id : req.body.userId);
         if (role !== "admin") {
             return res.json({ success: false, message: "Unauthorized: Admin only" });
         }
@@ -110,7 +118,8 @@ const listIngredients = async (req, res) => {
 // Update ingredient (Master Data OR Stock)
 const updateIngredient = async (req, res) => {
     try {
-        const { id, stock, minStock, costPrice, name, category, unit, branchId, userId } = req.body;
+        const { id, stock, minStock, costPrice, name, category, unit, branchId } = req.body;
+        const userId = req.user ? req.user.id : req.body.userId; // Prefer token context
         
         const { role, branchId: userBranchId } = await checkUserRole(userId);
 
@@ -128,7 +137,7 @@ const updateIngredient = async (req, res) => {
             }
             targetBranch = userBranchId; // Force strict branch
         } else if (role !== 'admin') {
-             return res.json({ success: false, message: "Unauthorized" });
+             return res.json({ success: false, message: `Unauthorized (Role: ${role}, ID: ${userId})` });
         }
 
         // 1. Update Master Data (Admin Only)
@@ -169,7 +178,7 @@ const updateIngredient = async (req, res) => {
 const transferStock = async (req, res) => {
     const session = await mongoose.startSession();
     try {
-        const { role } = await checkUserRole(req.body.userId);
+        const { role } = await checkUserRole(req.user ? req.user.id : req.body.userId);
         if (role !== "admin") {
             return res.json({ success: false, message: "Unauthorized: Admin only" });
         }
@@ -221,7 +230,7 @@ const transferStock = async (req, res) => {
 // Remove ingredient - ADMIN ONLY
 const removeIngredient = async (req, res) => {
     try {
-        const { role } = await checkUserRole(req.body.userId);
+        const { role } = await checkUserRole(req.user ? req.user.id : req.body.userId);
         if (role !== "admin") {
             return res.json({ success: false, message: "Unauthorized: Admin only" });
         }
@@ -242,7 +251,8 @@ const removeIngredient = async (req, res) => {
 // Report Waste (Báo Hủy) - Deduct stock and log transaction
 const reportWaste = async (req, res) => {
     try {
-        const { stockId, ingredientId, branchId, quantity, reason, userId } = req.body;
+        const { stockId, ingredientId, branchId, quantity, reason } = req.body;
+        const userId = req.user ? req.user.id : req.body.userId;
 
         if (!stockId || !quantity || quantity <= 0) {
             return res.json({ success: false, message: "Invalid input: stockId and positive quantity required" });
@@ -303,7 +313,8 @@ const reportWaste = async (req, res) => {
 // Audit Stock (Kiểm Kê) - Adjust stock to actual quantity
 const auditStock = async (req, res) => {
     try {
-        const { audits, branchId, userId } = req.body;
+        const { audits, branchId } = req.body;
+        const userId = req.user ? req.user.id : req.body.userId;
         // audits: [{ stockId, actualQuantity }, ...]
 
         if (!audits || !Array.isArray(audits) || audits.length === 0) {

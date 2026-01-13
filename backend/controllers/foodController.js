@@ -2,12 +2,13 @@ import foodModel from "../models/foodModel.js";
 import categoryModel from "../models/categoryModel.js";
 import userModel from "../models/userModel.js";
 import fs from "fs";
-import { io } from "../server.js";
+import { getIO } from "../utils/socket.js";
+import axios from "axios";
 
 // add food items
 const addFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "You are not admin" });
     }
@@ -39,7 +40,7 @@ const addFood = async (req, res) => {
     });
 
     await food.save();
-    if (io) io.emit("food:list_updated", { type: "ADD" });
+    getIO().emit("food:list_updated", { type: "ADD" });
     res.json({ success: true, message: "Food Added" });
   } catch (error) {
     console.log(error);
@@ -79,14 +80,14 @@ const listFood = async (req, res) => {
 // remove food item (Soft Delete)
 const removeFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "You are not admin" });
     }
 
     const food = await foodModel.findByIdAndUpdate(req.body.id, { isDeleted: true });
     if (food) {
-        if (io) io.emit("food:list_updated", { type: "REMOVE", id: req.body.id });
+        getIO().emit("food:list_updated", { type: "REMOVE", id: req.body.id });
         // Do not unlink file yet
       res.json({ success: true, message: "Food moved to Trash" });
     } else {
@@ -125,13 +126,13 @@ const listTrashFood = async (req, res) => {
 // restore food item
 const restoreFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
         return res.json({ success: false, message: "You are not admin" });
     }
     const food = await foodModel.findByIdAndUpdate(req.body.id, { isDeleted: false });
     if(food) {
-        if (io) io.emit("food:list_updated", { type: "RESTORE", id: req.body.id });
+        getIO().emit("food:list_updated", { type: "RESTORE", id: req.body.id });
         res.json({ success: true, message: "Food Restored" });
     } else {
         res.json({ success: false, message: "Food not found" });
@@ -145,7 +146,7 @@ const restoreFood = async (req, res) => {
 // force delete food item
 const forceDeleteFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "You are not admin" });
     }
@@ -167,10 +168,10 @@ const forceDeleteFood = async (req, res) => {
 // update food item
 const updateFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     // Note: auth middleware usually puts userId in body, but if using form-data, ensure userId is passed or extracted from token
     // If using authMiddleware (which we are), req.body.userId comes from the token decoding in middleware (if middleware sets it).
-    // Let's assume middleware does: req.body.userId = decoded.id.
+    // Let's assume middleware does: req.body.userId = decoded.id. NOW using req.user.id
     
     if (!userData || userData.role !== 'admin') {
       return res.json({ success: false, message: "You are not admin" });
@@ -223,7 +224,7 @@ const updateFood = async (req, res) => {
     }
 
     await foodModel.findByIdAndUpdate(id, updateData);
-    if (io) io.emit("food:list_updated", { type: "UPDATE", id: id });
+    getIO().emit("food:list_updated", { type: "UPDATE", id: id });
     res.json({ success: true, message: "Food Updated" });
   } catch (error) {
     console.log(error);
@@ -288,11 +289,50 @@ const searchFood = async (req, res) => {
       originalPrice: food.originalPrice || 0,
     }));
 
-    res.json({ success: true, data: flattenedFoods, count: flattenedFoods.length });
+  res.json({ success: true, data: flattenedFoods, count: flattenedFoods.length });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error searching food" });
   }
 };
 
-export { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood };
+// Get AI-powered food recommendations (Smart Combo)
+const getRecommendations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.json({ success: false, message: "Food ID is required" });
+    }
+
+    // Forward request to Python AI Service
+    const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
+    
+    const response = await axios.post(`${AI_SERVICE_URL}/api/recommend/combo`, { 
+      food_id: id 
+    });
+
+    if (response.data.success) {
+      res.json({
+        success: true,
+        recommendations: response.data.recommendations,
+        message: response.data.message || "Recommendations fetched successfully"
+      });
+    } else {
+      res.json({
+        success: false,
+        message: response.data.message || "Failed to get recommendations"
+      });
+    }
+  } catch (error) {
+    console.log("Error fetching recommendations:", error.message);
+    // If AI service is not available, return empty recommendations
+    res.json({
+      success: true,
+      recommendations: [],
+      message: "AI Service unavailable, no recommendations at this time"
+    });
+  }
+};
+
+export { addFood, listFood, removeFood, listCategories, listTrashFood, restoreFood, forceDeleteFood, updateFood, searchFood, getRecommendations };

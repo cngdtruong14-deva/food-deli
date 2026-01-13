@@ -20,7 +20,7 @@ const loginUser = async (req, res) => {
   ) {
     const token = jwt.sign({ id: "master_admin" }, process.env.JWT_SECRET);
     console.log("🔑 Master Admin login successful");
-    return res.json({ success: true, token, role: "admin" });
+    return res.json({ success: true, token, role: "admin", userId: "master_admin" });
   }
   // ============================================
 
@@ -41,7 +41,7 @@ const loginUser = async (req, res) => {
     }
     const role = user.role;
     const token = createToken(user._id);
-    res.json({ success: true, token, role });
+    res.json({ success: true, token, role, userId: user._id });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
@@ -137,7 +137,8 @@ const identifyCustomer = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { userId } = req.body; // Target user to delete
-    const adminId = req.body.operatorId || req.body.userId; // Operator (Admin)
+    // Admin ID: prefer req.user.id (from auth middleware), fallback to body (legacy/testing)
+    const adminId = (req.user && req.user.id) || req.body.operatorId || req.body.userId;
 
     const admin = await userModel.findById(adminId);
     if (!admin || admin.role !== "admin") {

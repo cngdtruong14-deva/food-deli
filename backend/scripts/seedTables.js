@@ -14,7 +14,10 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const seedTables = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URL);
+        const uri = process.env.MONGO_URI || process.env.MONGO_URL;
+        if (!uri) throw new Error("No MongoDB URI found via dotenv");
+        console.log(`Connecting to DB...`); // Masked URI logging if needed
+        await mongoose.connect(uri);
         console.log("Connected to MongoDB");
 
         // Fetch all branches

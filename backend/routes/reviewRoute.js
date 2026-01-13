@@ -6,7 +6,8 @@ import {
   getAdminReviews,
   checkReviewStatus,
   replyToReview,
-  getProductReviews
+  getProductReviews,
+  deleteReview
 } from "../controllers/reviewController.js";
 
 const reviewRouter = express.Router();
@@ -22,6 +23,9 @@ reviewRouter.post("/admin/list", authMiddleware, getAdminReviews);
 
 // Admin: Reply to a review
 reviewRouter.post("/admin/reply/:reviewId", authMiddleware, replyToReview);
+
+// Admin: Delete a review
+reviewRouter.post("/admin/delete/:reviewId", authMiddleware, deleteReview);
 
 // Check if order has been reviewed
 reviewRouter.get("/check/:orderId", checkReviewStatus);

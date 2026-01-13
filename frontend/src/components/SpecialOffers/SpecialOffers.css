@@ -1,0 +1,57 @@
+/* SpecialOffers.css */
+.special-offers-section {
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFFFFF 100%);
+    padding: 40px 0;
+    margin: 40px 0;
+    border-radius: 24px;
+    border: 2px solid #FFC107;
+    position: relative;
+    overflow: hidden;
+}
+
+.special-offers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.special-offers-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.special-offers-title h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #D84315;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+    background: linear-gradient(45deg, #D84315, #FF5722);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.fire-icon {
+    font-size: 32px;
+    color: #FF5722;
+    filter: drop-shadow(0 0 5px rgba(255, 87, 34, 0.4));
+}
+
+.carousel-container {
+    padding: 20px 0 40px 0;
+}
+
+/* Card Styling removed to use standard FoodItem */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .special-offers-title h2 {
+        font-size: 20px;
+    }
+}

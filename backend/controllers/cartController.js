@@ -7,7 +7,9 @@ const parseKey = (key) => key.split('_note_')[0];
 // add items to user cart
 const addToCart = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    // Auth middleware now puts id in req.user
+    // Fallback to req.body.userId only if not set (legacy/unprotected)
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     let cartData = await userData.cartData;
     const itemKey = req.body.itemId; // This might be composite now
     const realId = parseKey(itemKey);
@@ -37,7 +39,7 @@ const addToCart = async (req, res) => {
     }
     
     // Minimize cartData to remove zeros if any (Clean up)
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData });
+    await userModel.findByIdAndUpdate(req.user ? req.user.id : req.body.userId, { cartData });
     res.json({ success: true, message: "Added to Cart" });
   } catch (error) {
     console.log(error);
@@ -48,7 +50,7 @@ const addToCart = async (req, res) => {
 // remove from cart
 const removeFromCart = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     let cartData = await userData.cartData;
     const itemKey = req.body.itemId;
     
@@ -57,7 +59,7 @@ const removeFromCart = async (req, res) => {
     } else {
       delete cartData[itemKey];
     }
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData });
+    await userModel.findByIdAndUpdate(req.user ? req.user.id : req.body.userId, { cartData });
     res.json({ success: true, message: "Removed from Cart" });
   } catch (error) {
     console.log(error);
@@ -68,7 +70,7 @@ const removeFromCart = async (req, res) => {
 // fetch user cart data
 const getCart = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     let cartData = await userData.cartData;
     res.json({ success: true, cartData: cartData });
   } catch (error) {
@@ -80,7 +82,7 @@ const getCart = async (req, res) => {
 // Update Note (Swap Keys)
 const updateCartNote = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     let cartData = await userData.cartData;
     
     const { itemId, oldNote, newNote, quantity } = req.body;
@@ -104,7 +106,7 @@ const updateCartNote = async (req, res) => {
         cartData[newKey] = quantity;
     }
     
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData });
+    await userModel.findByIdAndUpdate(req.user ? req.user.id : req.body.userId, { cartData });
     res.json({ success: true, message: "Note updated" });
     
   } catch (error) {

@@ -7,7 +7,7 @@ import userModel from "../models/userModel.js";
 const saveRecipe = async (req, res) => {
   try {
     // Verify admin
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Không có quyền truy cập" });
     }
@@ -88,7 +88,7 @@ const getRecipe = async (req, res) => {
 const listRecipes = async (req, res) => {
   try {
     // Verify admin
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Không có quyền truy cập" });
     }
@@ -110,7 +110,7 @@ const listRecipes = async (req, res) => {
 const deleteRecipe = async (req, res) => {
   try {
     // Verify admin
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Không có quyền truy cập" });
     }
@@ -133,7 +133,7 @@ const deleteRecipe = async (req, res) => {
 const recalculateAllCosts = async (req, res) => {
   try {
     // Verify admin
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userModel.findById(req.user ? req.user.id : req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "Không có quyền truy cập" });
     }

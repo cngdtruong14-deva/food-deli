@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { 
   DollarSign, Users, RefreshCw, 
-  TrendingUp, Clock, Utensils, MapPin, Activity, Loader2
+  TrendingUp, Clock, Utensils, MapPin, Activity, Loader2, LogIn
 } from 'lucide-react';
 
 const Dashboard = ({ url }) => {
@@ -21,6 +21,10 @@ const Dashboard = ({ url }) => {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Check if user is logged in
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token;
 
   // Constants - Modern color palette
   const COLORS = ['#FF6B00', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
@@ -45,6 +49,8 @@ const Dashboard = ({ url }) => {
 
   // 1. Fetch Branches on Mount
   useEffect(() => {
+    if (!isLoggedIn) return;
+    
     const fetchBranches = async () => {
       try {
         const response = await axios.get(`${url}/api/branch/list`);
@@ -60,11 +66,11 @@ const Dashboard = ({ url }) => {
       }
     };
     fetchBranches();
-  }, [url]);
+  }, [url, isLoggedIn]);
 
   // 2. Fetch Dashboard Data
   const fetchDashboardData = useCallback(async (isRefresh = false) => {
-    if (!selectedBranch) return;
+    if (!selectedBranch || !isLoggedIn) return;
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -72,7 +78,7 @@ const Dashboard = ({ url }) => {
     }
     try {
       const response = await axios.get(`${url}/api/analytics/dashboard`, {
-        params: { branchId: selectedBranch, userId: localStorage.getItem('userId') },
+        params: { branchId: selectedBranch },
         headers: { token: localStorage.getItem('token') }
       });
       if (response.data.success) {
@@ -88,14 +94,14 @@ const Dashboard = ({ url }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedBranch, url]);
+  }, [selectedBranch, url, isLoggedIn]);
 
   // 3. Fetch Live Status (Polling)
   const fetchLiveStatus = useCallback(async () => {
-    if (!selectedBranch) return;
+    if (!selectedBranch || !isLoggedIn) return;
     try {
       const response = await axios.get(`${url}/api/analytics/live`, {
-        params: { branchId: selectedBranch, userId: localStorage.getItem('userId') },
+        params: { branchId: selectedBranch },
         headers: { token: localStorage.getItem('token') }
       });
       if (response.data.success) {
@@ -104,23 +110,36 @@ const Dashboard = ({ url }) => {
     } catch (error) {
       console.error("Live status error", error);
     }
-  }, [selectedBranch, url]);
+  }, [selectedBranch, url, isLoggedIn]);
 
   // Effects
   useEffect(() => {
-    if (selectedBranch) {
+    if (selectedBranch && isLoggedIn) {
       fetchDashboardData();
       fetchLiveStatus();
       
       const interval = setInterval(fetchLiveStatus, 30000); // Poll every 30s
       return () => clearInterval(interval);
     }
-  }, [selectedBranch, fetchDashboardData, fetchLiveStatus]);
+  }, [selectedBranch, isLoggedIn, fetchDashboardData, fetchLiveStatus]);
 
   const handleRefresh = () => {
     fetchDashboardData(true);
     fetchLiveStatus();
   };
+
+  // Not logged in state
+  if (!isLoggedIn) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-loading">
+          <LogIn className="loading-spinner" size={48} style={{ animation: 'none', color: '#FF6B00' }} />
+          <h2 style={{ marginTop: '16px', color: '#1F2937' }}>Yêu cầu đăng nhập</h2>
+          <p style={{ color: '#6B7280', marginTop: '8px' }}>Vui lòng đăng nhập tài khoản Admin để xem Dashboard</p>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (!dashboardData && loading) {
@@ -138,11 +157,17 @@ const Dashboard = ({ url }) => {
   const revenueData = dashboardData?.revenue || [];
   const topProducts = dashboardData?.topProducts || [];
   const peakHours = dashboardData?.peakHours || [];
-  const lostSales = dashboardData?.lostSales || [];
+  
+  // Process lostSales to handle missing reasons
+  const rawLostSales = dashboardData?.lostSales || [];
+  const lostSales = rawLostSales.map(item => ({
+    ...item,
+    _id: item._id || 'Khác' // Fallback for missing cancellation reason
+  }));
 
   // Calculate Today's Revenue (Simple approximation from list or live)
   // For precise "Today", we might need a separate endpoint or filter the revenueData array
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
   const todayRevenueObj = revenueData.find(d => d._id === today);
   const todayRevenue = todayRevenueObj ? todayRevenueObj.dailyRevenue : 0;
 
@@ -325,6 +350,7 @@ const Dashboard = ({ url }) => {
                     outerRadius={100}
                     paddingAngle={3}
                     dataKey="count"
+                    nameKey="_id"
                   >
                     {lostSales.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

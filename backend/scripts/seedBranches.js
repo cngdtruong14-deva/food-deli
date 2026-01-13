@@ -33,7 +33,13 @@ const seedBranches = async () => {
             let finalName = parts[0].trim();
             
             // If it starts with a number (like "10 ..."), it's likely the address too
+            // Priority: Use the explicit address from JSON if it looks valid (longer than the name or contains comma)
             let address = finalName;
+            if (item.address && item.address !== item.name && item.address.length > 10) {
+                 address = item.address;
+            } else if (item.address && item.address.includes(',')) {
+                 address = item.address;
+            }
             
             // Fallback image if empty
             let image = item.image || ""; 
@@ -41,7 +47,7 @@ const seedBranches = async () => {
             
             return {
                 name: "Cơ sở " + finalName,
-                address: finalName + ", Hà Nội",
+                address: address === finalName ? (finalName + ", Hà Nội") : address,
                 phone: item.phone,
                 image: item.image, // Use the filename from scraper
                 openingHours: item.openingHours || "08:00 - 23:00",
